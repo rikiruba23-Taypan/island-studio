@@ -1,1 +1,500 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Руководство пользователя — Студия «Остров Рассвета» (60×60)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            slate: {
+              850: '#141c2b',
+              925: '#0b111e',
+              950: '#060a12'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #060a12;
+      color: #f1f5f9;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b111e;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+      color: #ffffff;
+      border-color: #38bdf8;
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+    }
+    .kbd-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.1rem 0.45rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      background-color: #1e293b;
+      color: #38bdf8;
+      border: 1px solid #334155;
+      border-radius: 0.375rem;
+      box-shadow: 0 1px 0 #0f172a;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100">
 
+  <!-- TOP NAVIGATION BAR -->
+  <header class="sticky top-0 z-30 bg-slate-925/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
+    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-sky-900/40 border border-sky-400/30">
+          <i class="fa-solid fa-book-open text-white text-base"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-base tracking-tight text-white">ОСТРОВ РАССВЕТА • РУКОВОДСТВО</h1>
+            <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-semibold">Справка</span>
+          </div>
+          <p class="text-xs text-slate-400">Подробный гид по всем инструментам планировщика сетки 60×60</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <a href="index.html" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-xs font-bold text-white shadow-lg shadow-sky-900/30 transition flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left"></i>
+          <span>Вернуться в Студию</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6 space-y-6">
+
+    <!-- HERO BANNER -->
+    <div class="bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/60 border border-slate-800 rounded-2xl p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div class="space-y-1.5 max-w-2xl">
+        <h2 class="text-lg font-extrabold text-white">Добро пожаловать в Архитектор «Острова Рассвета»!</h2>
+        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
+          Эта студия создана для точного проектирования застройки острова (сетка <span class="font-mono text-sky-400 font-semibold">60×60</span> клеток) перед переносом в игру <span class="text-amber-300 font-semibold">Whiteout Survival</span>. Выберите нужный раздел ниже, чтобы быстро освоить все возможности.
+        </p>
+      </div>
+      <div class="flex items-center gap-2 bg-slate-950/80 border border-slate-800 px-3.5 py-2.5 rounded-xl shrink-0">
+        <i class="fa-solid fa-lightbulb text-amber-400 text-lg"></i>
+        <div class="text-xs">
+          <div class="font-semibold text-white">Совет новичкам</div>
+          <div class="text-slate-400 text-[11px]">Начните со вкладки «Быстрый старт»</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION TABS -->
+    <nav class="flex flex-wrap gap-2 bg-slate-925 p-2 rounded-2xl border border-slate-800" id="helpTabs">
+      <button onclick="switchHelpTab('quickstart')" data-tab="quickstart" class="tab-btn active px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 border border-transparent transition flex items-center gap-2">
+        <i class="fa-solid fa-rocket"></i><span>1. Быстрый старт</span>
+      </button>
+      <button onclick="switchHelpTab('camera')" data-tab="camera" class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white border border-transparent transition flex items-center gap-2">
+        <i class="fa-solid fa-compass"></i><span>2. Камера и навигация</span>
+      </button>
+      <button onclick="switchHelpTab('catalog')" data-tab="catalog" class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white border border-transparent transition flex items-center gap-2">
+        <i class="fa-solid fa-layer-group"></i><span>3. Каталог и фильтры</span>
+      </button>
+      <button onclick="switchHelpTab('tools')" data-tab="tools" class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white border border-transparent transition flex items-center gap-2">
+        <i class="fa-solid fa-hammer"></i><span>4. Инструменты стройки</span>
+      </button>
+      <button onclick="switchHelpTab('rightpanel')" data-tab="rightpanel" class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white border border-transparent transition flex items-center gap-2">
+        <i class="fa-solid fa-tree"></i><span>5. Лес, чек-лист и баффы</span>
+      </button>
+      <button onclick="switchHelpTab('export')" data-tab="export" class="tab-btn px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white border border-transparent transition flex items-center gap-2">
+        <i class="fa-solid fa-file-export"></i><span>6. Проекты и Паспорт</span>
+      </button>
+    </nav>
+
+    <!-- ==================== TAB 1: QUICK START ==================== -->
+    <section id="sec-quickstart" class="help-section space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-2.5">
+          <div class="flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-lg bg-sky-500/20 text-sky-400 font-mono font-bold text-xs flex items-center justify-center border border-sky-500/30">01</span>
+            <h3 class="font-bold text-sm text-white">Выберите шаблон или чистый остров</h3>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            В левом верхнем углу в списке <b>«Проект»</b> можно выбрать готовый макет (например, <i>«Северная Гавань»</i> или <i>«Чистый остров»</i>) и нажать <span class="px-2 py-0.5 rounded bg-sky-600 text-white text-[11px] font-semibold">Применить</span>.
+          </p>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-2.5">
+          <div class="flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 font-mono font-bold text-xs flex items-center justify-center border border-amber-500/30">02</span>
+            <h3 class="font-bold text-sm text-white">Выбирайте постройки слева</h3>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            В левом каталоге собраны все 84 игровых объекта с реальными размерами и лимитами. Наведите курсор на карточку, чтобы увеличить превью, или нажмите кнопку <span class="px-2 py-0.5 rounded bg-slate-800 text-emerald-400 border border-emerald-500/30 text-[11px]">Доступные</span>, чтобы скрыть уже исчерпанные лимиты.
+          </p>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-2.5">
+          <div class="flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 font-mono font-bold text-xs flex items-center justify-center border border-emerald-500/30">03</span>
+            <h3 class="font-bold text-sm text-white">Ставьте и двигайте здания по координатам</h3>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Над курсором всегда отображаются точные координаты <span class="font-mono text-sky-400">X</span> и <span class="font-mono text-sky-400">Y</span>. Чтобы поставить здание, зажмите <b>ЛКМ</b>, подведите контур в нужное место и отпустите. Чтобы передвинуть уже стоящее здание — просто захватите его <b>ЛКМ</b> и перетащите.
+          </p>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-2.5">
+          <div class="flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-lg bg-purple-500/20 text-purple-400 font-mono font-bold text-xs flex items-center justify-center border border-purple-500/30">04</span>
+            <h3 class="font-bold text-sm text-white">Сохраните проект и откройте Паспорт</h3>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Нажмите <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-200 text-[11px]">Проекты</span> -> <b>Скачать .JSON</b>, чтобы сохранить файл схемы на компьютер или отправить другу. Кнопка <span class="px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-bold text-[11px]">Паспорт</span> выдаст готовый список координат для переноса в игру.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: CAMERA & NAVIGATION ==================== -->
+    <section id="sec-camera" class="help-section hidden space-y-4">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <h3 class="font-bold text-base text-white flex items-center gap-2">
+          <i class="fa-solid fa-computer-mouse text-sky-400"></i> Управление мышью на карте
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 space-y-1">
+            <div class="font-bold text-sky-300">Колёсико мыши</div>
+            <p class="text-slate-400">Плавное приближение и отдаление (от 15% до 350%) точно в точку, куда указывает курсор.</p>
+          </div>
+          <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 space-y-1">
+            <div class="font-bold text-sky-300">Зажать правую кнопку (ПКМ)</div>
+            <p class="text-slate-400">Перемещение камеры по острову в любом направлении без риска случайно поставить объект.</p>
+          </div>
+          <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 space-y-1">
+            <div class="font-bold text-sky-300">Верхний HUD-индикатор</div>
+            <p class="text-slate-400">Показывает текущие координаты клетки и название объекта под курсором.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <h3 class="font-bold text-base text-white flex items-center gap-2">
+          <i class="fa-solid fa-eye text-amber-400"></i> Верхняя и нижняя панели обзора
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="font-bold text-white">Чекбоксы отображения (вверху справа от карты)</div>
+            <ul class="space-y-1 text-slate-300">
+              <li>• <b>Сетка</b> — включает/выключает разметку клеток 60×60.</li>
+              <li>• <b>Оси</b> — подсвечивает центральные линии симметрии (X=31, Y=31).</li>
+              <li>• <b>Подписи</b> — отображает названия крупных построек поверх текстур.</li>
+              <li>• <b>Резервы 3×3</b> — выделяет пунктиром квадраты 3×3 из «Серенады роз» под будущие ивентовые здания.</li>
+            </ul>
+          </div>
+          <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="font-bold text-white">Быстрая навигация (внизу под картой)</div>
+            <ul class="space-y-1 text-slate-300">
+              <li>• <b>Весь остров / Север / Запад / Юг / Восток</b> — мгновенно фокусирует камеру на выбранном квадранте карты.</li>
+              <li>• <b>Иконка закладки (<i class="fa-solid fa-bookmark text-amber-400"></i>)</b> — запоминает текущее положение и зум камеры.</li>
+              <li>• <b>Мой вид</b> — возвращает камеру в сохранённый вами ракурс в один клик.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: CATALOG ==================== -->
+    <section id="sec-catalog" class="help-section hidden space-y-4">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <h3 class="font-bold text-base text-white flex items-center gap-2">
+          <i class="fa-solid fa-cubes text-emerald-400"></i> Левая панель — Каталог построек
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-2">
+            <div class="font-bold text-sky-300">Поиск и фильтры редкости</div>
+            <p class="text-slate-300 leading-relaxed">
+              Используйте строку поиска по названию или кнопки категорий: <b>Все (84)</b>, <b>Мифические</b>, <b>Великие</b>, <b>Редкие</b>, <b>Необычные</b>, <b>Декор</b>, <b>Дороги</b> и <b>Лес</b>.
+            </p>
+            <div class="pt-1">
+              <span class="px-2 py-0.5 rounded bg-slate-800 text-emerald-400 border border-emerald-500/30 font-semibold">Доступные</span> — умный фильтр-переключатель. При нажатии скрывает все здания, лимит которых уже полностью установлен на карте. Повторное нажатие возвращает полный список.
+            </div>
+          </div>
+
+          <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-2">
+            <div class="font-bold text-amber-300">Умное авто-соединение дорог, воды и заборов</div>
+            <p class="text-slate-300 leading-relaxed">
+              Объекты из раздела <b>«Дороги»</b> (тротуары, тропы, бассейны с подогревом, цветочные бордюры, палисады и мраморные заборы) имеют размер <span class="font-mono text-white">1×1</span>, но при установке рядом друг с другом студия автоматически объединяет их в <b>угловые секции (3 клетки)</b> и <b>площадки (квадраты 2×2)</b> с соответствующими текстурами.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: CONSTRUCTION TOOLS ==================== -->
+    <section id="sec-tools" class="help-section hidden space-y-4">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <h3 class="font-bold text-base text-white flex items-center gap-2">
+          <i class="fa-solid fa-toolbox text-sky-400"></i> Инструменты верхней панели
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+
+          <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-white"><i class="fa-solid fa-hammer text-sky-400 mr-1.5"></i>Строить</span>
+              <span class="kbd-badge">B</span>
+            </div>
+            <p class="text-slate-400 leading-relaxed">
+              Основной режим. Для зданий 2×2+ зажмите ЛКМ, наведите контур и отпустите. Для дорог/леса 1×1 зажмите ЛКМ и ведите линию. Клик по уже стоящему зданию позволяет сразу перетащить его.
+            </p>
+          </div>
+
+          <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-white"><i class="fa-solid fa-vector-square text-sky-400 mr-1.5"></i>Зона</span>
+              <span class="kbd-badge">R</span>
+            </div>
+            <p class="text-slate-400 leading-relaxed">
+              Зажмите ЛКМ и растяните прямоугольник — вся выделенная площадь заполнится выбранным объектом (удобно для площадей, парков и водоёмов).
+            </p>
+          </div>
+
+          <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-white"><i class="fa-regular fa-square text-sky-400 mr-1.5"></i>Рамка</span>
+              <span class="kbd-badge">F</span>
+            </div>
+            <p class="text-slate-400 leading-relaxed">
+              Растягивает полый периметр из выбранного тайла 1×1. Идеально для быстрого ограждения кварталов забором, изгородью или дорогой.
+            </p>
+          </div>
+
+          <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-white"><i class="fa-solid fa-slash text-sky-400 mr-1.5"></i>Линия</span>
+              <span class="kbd-badge">L</span>
+            </div>
+            <p class="text-slate-400 leading-relaxed">
+              Прокладывает прямую или диагональную линию от точки нажатия до точки отпускания кнопки мыши.
+            </p>
+          </div>
+
+          <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-white"><i class="fa-solid fa-up-down-left-right text-sky-400 mr-1.5"></i>Двигать</span>
+              <span class="kbd-badge">M</span>
+            </div>
+            <p class="text-slate-400 leading-relaxed">
+              Безопасное перемещение одиночной постройки на новое место. Если новое место занято (при выключенной галочке «Поверх»), здание вернётся обратно.
+            </p>
+          </div>
+
+          <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-purple-300"><i class="fa-solid fa-object-group text-purple-400 mr-1.5"></i>Перенос зоны</span>
+              <span class="kbd-badge">V</span>
+            </div>
+            <p class="text-slate-400 leading-relaxed">
+              Захватывает сразу <b>всю связанную группу объектов</b> (например, квартал зданий вместе с дорожками и забором) и позволяет передвинуть её целиком.
+            </p>
+          </div>
+
+          <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-rose-300"><i class="fa-solid fa-broom text-rose-400 mr-1.5"></i>Тип</span>
+              <span class="text-[10px] text-slate-500">Массовое удаление</span>
+            </div>
+            <p class="text-slate-400 leading-relaxed">
+              Кликните ЛКМ на любую постройку или дорогу, чтобы мгновенно удалить <b>все объекты такого же типа</b> со всей карты.
+            </p>
+          </div>
+
+          <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-white"><i class="fa-solid fa-eraser text-slate-300 mr-1.5"></i>Ластик</span>
+              <span class="kbd-badge">E</span>
+            </div>
+            <p class="text-slate-400 leading-relaxed">
+              Удаляет одиночные объекты по клику или при ведении с зажатой ЛКМ.
+            </p>
+          </div>
+
+          <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-white"><i class="fa-solid fa-fill-drip text-sky-400 mr-1.5"></i>Заливка</span>
+              <span class="kbd-badge">G</span>
+            </div>
+            <p class="text-slate-400 leading-relaxed">
+              Заполняет пустую замкнутую область выбранным тайлом 1×1 (например, чтобы залить озеро «Бассейном с подогревом» внутри контура).
+            </p>
+          </div>
+
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs pt-2 border-t border-slate-800">
+          <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+            <div class="font-bold text-sky-300 mb-1">Галочка «Поверх»</div>
+            <p class="text-slate-400">Если включена — новая постройка стирает старые объекты под собой. Если выключена — строительство разрешено только на пустых клетках.</p>
+          </div>
+          <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+            <div class="font-bold text-purple-300 mb-1">Симметрия (1× / Зерк.X / Зерк.Y / 4×Квадр)</div>
+            <p class="text-slate-400">Автоматически дублирует ставящиеся объекты зеркально по горизонтали, вертикали или сразу на все 4 стороны острова.</p>
+          </div>
+          <div class="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+            <div class="font-bold text-amber-300 mb-1">Отменить / Повторить (<span class="kbd-badge">Ctrl+Z</span> / <span class="kbd-badge">Ctrl+Y</span>)</div>
+            <p class="text-slate-400">Хранит историю последних 35 действий — можно смело экспериментировать с планировкой.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 5: RIGHT PANEL & FOREST ==================== -->
+    <section id="sec-rightpanel" class="help-section hidden space-y-4">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <h3 class="font-bold text-base text-white flex items-center gap-2">
+          <i class="fa-solid fa-tree text-emerald-400"></i> Умные инструменты озеленения (Правая панель)
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          <div class="bg-slate-950/70 p-4 rounded-xl border border-emerald-500/30 space-y-1.5">
+            <div class="font-bold text-emerald-300">Авто-лес замкнутой области</div>
+            <p class="text-slate-300 leading-relaxed">
+              Нажмите эту кнопку, а затем кликните на <b>пустую клетку внутри огороженного двора или сектора</b>. Алгоритм сам заполнит только эту замкнутую пустоту красивой смесью из сосен, морозных деревьев и снежных рощ.
+            </p>
+          </div>
+          <div class="bg-slate-950/70 p-4 rounded-xl border border-rose-500/30 space-y-1.5">
+            <div class="font-bold text-rose-300">Срубить лес замкнутой области</div>
+            <p class="text-slate-300 leading-relaxed">
+              Нажмите кнопку и кликните по дереву внутри нужного сектора — инструмент вырубит <b>весь лес только внутри этого контура</b>, не трогая деревья на остальном острове.
+            </p>
+          </div>
+          <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="font-bold text-slate-200">Авто-лес пустот / Срубить лес</div>
+            <p class="text-slate-400 leading-relaxed">
+              Глобальные кнопки для всего острова: засаживают все оставшиеся пустые клетки карты или полностью убирают все деревья с острова.
+            </p>
+          </div>
+          <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="font-bold text-amber-300">Шкала заполнения и Процветание</div>
+            <p class="text-slate-400 leading-relaxed">
+              В реальном времени считает занятые клетки (из 3600) отдельно по зданиям, дорогам/воде и лесу, а также суммирует общий уровень <b>Процветания</b>.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-3 text-xs">
+        <h3 class="font-bold text-base text-white flex items-center gap-2">
+          <i class="fa-solid fa-list-check text-sky-400"></i> Чек-лист (59) и Сводка баффов
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="font-bold text-emerald-300">Интерактивный Чек-лист</div>
+            <p class="text-slate-300 leading-relaxed">
+              Автоматически делит уникальные и лимитные здания на два списка: <b>установленные</b> и <b>неиспользованные</b>.<br>
+              • Клик по установленному зданию (<i class="fa-solid fa-circle-check text-emerald-400"></i>) <b>находит его на карте</b> и центрирует камеру.<br>
+              • Клик по неиспользованному (<i class="fa-solid fa-circle-exclamation text-amber-400"></i>) <b>сразу выбирает его</b> в каталоге и включает режим строительства.
+            </p>
+          </div>
+          <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-1.5">
+            <div class="font-bold text-sky-300">Вкладка «Сводка баффов»</div>
+            <p class="text-slate-300 leading-relaxed">
+              Отображает полный перечень активных боевых и экономических бонусов от всех размещённых на острове зданий (атака/защита войск, скорость тренировок, исследований, строительства и сбора ресурсов).
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 6: EXPORT & PASSPORT ==================== -->
+    <section id="sec-export" class="help-section hidden space-y-4">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-5 space-y-4 text-xs">
+        <h3 class="font-bold text-base text-white flex items-center gap-2">
+          <i class="fa-solid fa-share-nodes text-amber-400"></i> Сохранение проектов, обмен и перенос в игру
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-2">
+            <div class="font-bold text-sky-400 text-sm"><i class="fa-solid fa-floppy-disk mr-1.5"></i>Проекты (.JSON)</div>
+            <p class="text-slate-300 leading-relaxed">
+              Позволяет сохранять неограниченное количество планировок в память вашего браузера (они также появятся в верхнем выпадающем списке «Проект»).
+            </p>
+            <p class="text-slate-400 leading-relaxed">
+              Кнопки <b>«Скачать .JSON»</b> и <b>«Загрузить .JSON»</b> позволяют сохранить схему в виде лёгкого файла и переслать другу в Telegram или Discord, чтобы он открыл вашу застройку у себя.
+            </p>
+          </div>
+
+          <div class="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-2">
+            <div class="font-bold text-emerald-400 text-sm"><i class="fa-solid fa-camera mr-1.5"></i>Режим скриншота (PNG)</div>
+            <p class="text-slate-300 leading-relaxed">
+              Скрывает все боковые меню и верхние панели, идеально центрирует весь остров по экрану и выводит подсказку для чистого снимка экрана (<span class="kbd-badge">Win + Shift + S</span>).
+            </p>
+            <p class="text-slate-400 leading-relaxed">
+              Чтобы вернуть интерфейс после скриншота, нажмите жёлтую кнопку <b>«Готово / Вернуть меню»</b> внизу экрана.
+            </p>
+          </div>
+
+          <div class="bg-slate-950/70 p-4 rounded-xl border border-amber-500/30 space-y-2">
+            <div class="font-bold text-amber-400 text-sm"><i class="fa-solid fa-file-contract mr-1.5"></i>Инженерный Паспорт</div>
+            <p class="text-slate-300 leading-relaxed">
+              Формирует подробную спецификацию вашей планировки: список всех задействованных зданий с лимитами и раскрывающуюся <b>Матрицу координат X/Y</b> для каждого объекта.
+            </p>
+            <p class="text-slate-400 leading-relaxed">
+              Паспорт можно скопировать в буфер обмена или скачать в виде файла <span class="font-mono text-white">.MD</span>, чтобы удобно сверяться с координатами при строительстве в игре.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800/80 bg-slate-925 py-4 px-4 mt-8">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+      <div>Студия «Остров Рассвета» • Whiteout Survival Urban Planner</div>
+      <a href="index.html" class="text-sky-400 hover:text-sky-300 font-semibold transition">Открыть рабочее поле студии →</a>
+    </div>
+  </footer>
+
+  <script>
+    function switchHelpTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+      });
+      document.querySelectorAll('.help-section').forEach(sec => {
+        sec.classList.toggle('hidden', sec.id !== `sec-${tabName}`);
+      });
+    }
+  </script>
+</body>
+</html>

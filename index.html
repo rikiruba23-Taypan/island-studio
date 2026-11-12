@@ -1,0 +1,2770 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Остров Рассвета — Архитектор Города V10 (Whiteout Survival)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            slate: {
+              850: '#141c2b',
+              925: '#0b111e',
+              950: '#060a12'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #060a12;
+      color: #f1f5f9;
+      overflow: hidden;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b111e;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(51, 65, 85, 0.6);
+    }
+    .tool-btn.active {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #ffffff;
+      border-color: #60a5fa;
+      box-shadow: 0 0 15px rgba(37, 99, 235, 0.45);
+    }
+    .view-btn.active {
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      color: #ffffff;
+      border-color: #7dd3fc;
+    }
+    .sym-btn.active {
+      background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+      color: #ffffff;
+      border-color: #c4b5fd;
+    }
+    .catalog-card.selected {
+      border-color: #38bdf8;
+      background: rgba(14, 165, 233, 0.16);
+      box-shadow: inset 0 0 0 1px #38bdf8, 0 4px 12px rgba(2, 132, 199, 0.25);
+    }
+    canvas {
+      display: block;
+      cursor: crosshair;
+    }
+  </style>
+</head>
+<body class="h-screen w-screen flex flex-col select-none bg-slate-950 text-slate-100">
+
+  <!-- ==================== TOP HEADER & TOOLBAR ==================== -->
+  <header class="h-14 bg-slate-925 border-b border-slate-800 px-3 flex items-center justify-between gap-2 shrink-0 z-30">
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-sky-900/40 border border-sky-400/30">
+          <i class="fa-solid fa-compass-drafting text-white text-base"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-bold text-sm tracking-tight text-white">ОСТРОВ РАССВЕТА</h1>
+            <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 font-semibold">Студия V1</span>
+          </div>
+          <p class="text-[11px] text-slate-400 leading-none mt-0.5">Сетка 60×60 • Изометрия & Чертёж</p>
+        </div>
+      </div>
+
+      <div class="h-7 w-px bg-slate-800 mx-1"></div>
+
+<div class="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700/80 rounded-lg px-2 py-1">
+        <i class="fa-solid fa-city text-amber-400 text-xs"></i>
+        <span class="text-xs text-slate-400 hidden xl:inline">Проект:</span>
+        <select id="presetSelect" onchange="updatePresetDeleteBtn()" class="bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer pr-1 max-w-[260px] truncate">
+        </select>
+        <button onclick="applySelectedPreset()" title="Загрузить выбранный проект" class="ml-1 px-2 py-1 rounded bg-sky-600 hover:bg-sky-500 text-[11px] font-semibold text-white transition flex items-center gap-1">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Применить
+        </button>
+        <button id="saveToPresetBtn" onclick="saveCurrentToSelectedPreset()" title="Сохранить текущую карту в выбранный проект" class="px-2 py-1 rounded bg-emerald-600/90 hover:bg-emerald-500 text-white text-[11px] font-semibold transition flex items-center justify-center">
+          <i class="fa-solid fa-floppy-disk"></i>
+        </button>
+        <button id="deletePresetBtn" onclick="deleteSelectedPreset()" title="Удалить выбранный проект из списка" class="px-2 py-1 rounded bg-slate-800 hover:bg-rose-600/80 text-slate-400 hover:text-white text-[11px] transition flex items-center justify-center">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </div>
+
+    <div class="flex items-center gap-2">
+      <div class="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+      </div>
+
+      <div class="h-6 w-px bg-slate-800"></div>
+
+      <div class="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800 gap-0.5">
+        <button onclick="setTool('brush')" id="tool-brush" title="Кисть / Постройка (Клавиша B)" class="tool-btn active px-2.5 py-1 rounded-md text-xs font-medium text-slate-300 hover:text-white transition flex items-center gap-1 border border-transparent">
+          <i class="fa-solid fa-hammer"></i>
+          <span class="hidden 2xl:inline">Строить</span>
+        </button>
+        <button onclick="setTool('rect')" id="tool-rect" title="Прямоугольная заливка зоны (Клавиша R)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-medium text-slate-300 hover:text-white transition flex items-center gap-1 border border-transparent">
+          <i class="fa-solid fa-vector-square"></i>
+          <span class="hidden 2xl:inline">Зона</span>
+        </button>
+        <button onclick="setTool('frame')" id="tool-frame" title="Рамка / Периметр (Клавиша F)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-medium text-slate-300 hover:text-white transition flex items-center gap-1 border border-transparent">
+          <i class="fa-regular fa-square"></i>
+          <span class="hidden 2xl:inline">Рамка</span>
+        </button>
+        <button onclick="setTool('line')" id="tool-line" title="Линия / Дорога (Клавиша L)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-medium text-slate-300 hover:text-white transition flex items-center gap-1 border border-transparent">
+          <i class="fa-solid fa-slash"></i>
+          <span class="hidden 2xl:inline">Линия</span>
+        </button>
+<button onclick="setTool('move')" id="tool-move" title="Двигать постройку без удаления соседних (Клавиша M)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-medium text-slate-300 hover:text-white transition flex items-center gap-1 border border-transparent">
+          <i class="fa-solid fa-up-down-left-right"></i>
+          <span class="hidden 2xl:inline">Двигать</span>
+        </button>
+        <button onclick="setTool('area_move')" id="tool-area_move" title="Перемещение области (Выделить и перенести группу, Клавиша V)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-medium text-purple-300 hover:text-white transition flex items-center gap-1 border border-transparent">
+          <i class="fa-solid fa-object-group"></i>
+          <span class="hidden 2xl:inline">Перенос зоны</span>
+        </button>
+        <button onclick="setTool('delete_type')" id="tool-delete_type" title="Удалить все постройки выбранного типа (ЛКМ по объекту)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-medium text-rose-300 hover:text-rose-100 transition flex items-center gap-1 border border-transparent">
+          <i class="fa-solid fa-broom"></i>
+          <span class="hidden 2xl:inline">Тип</span>
+        </button>        <button onclick="setTool('erase')" id="tool-erase" title="Ластик (Клавиша E)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-medium text-slate-300 hover:text-white transition flex items-center gap-1 border border-transparent">
+          <i class="fa-solid fa-eraser"></i>
+        </button>
+        <button onclick="setTool('fill')" id="tool-fill" title="Заливка замкнутой области (Клавиша G)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-medium text-slate-300 hover:text-white transition flex items-center gap-1 border border-transparent">
+          <i class="fa-solid fa-fill-drip"></i>
+          <span class="hidden 2xl:inline">Заливка</span>
+        </button>
+      </div>
+
+      <label class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 cursor-pointer text-xs" title="Заменять под новой постройкой">
+        <input type="checkbox" id="overwriteToggle" checked class="accent-sky-500 rounded cursor-pointer" />
+        <span class="text-slate-300 font-medium">Поверх</span>
+      </label>
+
+      <div class="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800 gap-0.5">
+        <button onclick="setSymmetry('none')" id="sym-none" class="sym-btn active px-2 py-1 rounded text-[11px] font-semibold text-slate-300 border border-transparent">1×</button>
+        <button onclick="setSymmetry('x')" id="sym-x" class="sym-btn px-2 py-1 rounded text-[11px] font-semibold text-slate-300 border border-transparent" title="Зеркало X">Зерк.X</button>
+        <button onclick="setSymmetry('y')" id="sym-y" class="sym-btn px-2 py-1 rounded text-[11px] font-semibold text-slate-300 border border-transparent" title="Зеркало Y">Зерк.Y</button>
+        <button onclick="setSymmetry('quad')" id="sym-quad" class="sym-btn px-2 py-1 rounded text-[11px] font-semibold text-slate-300 border border-transparent" title="4 квадранта">4×Квадр</button>
+      </div>
+
+      <div class="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+        <button onclick="undo()" id="undoBtn" title="Отменить (Ctrl+Z)" class="px-2 py-1 text-xs text-slate-300 hover:text-white disabled:opacity-30 transition">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+        <button onclick="redo()" id="redoBtn" title="Повторить (Ctrl+Y)" class="px-2 py-1 text-xs text-slate-300 hover:text-white disabled:opacity-30 transition">
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button onclick="openSlotsModal()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition flex items-center gap-1.5">
+        <i class="fa-solid fa-floppy-disk text-sky-400"></i>
+        <span class="hidden xl:inline">Проекты</span>
+      </button>
+      <button onclick="exportCanvasPNG()" title="Скачать рендер PNG" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition flex items-center gap-1.5">
+        <i class="fa-solid fa-camera text-emerald-400"></i>
+        <span class="hidden xl:inline">PNG</span>
+      </button>
+      <button onclick="openPassportModal()" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 text-xs font-bold text-slate-950 shadow-lg shadow-amber-900/30 transition flex items-center gap-1.5">
+        <i class="fa-solid fa-file-contract"></i>
+        <span>Паспорт</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN WORKSPACE ==================== -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- LEFT SIDEBAR: CATALOG -->
+    <aside class="w-80 bg-slate-925 border-r border-slate-800 flex flex-col shrink-0 z-20">
+      <div id="activeItemBanner" class="p-3 bg-slate-900/90 border-b border-slate-800"></div>
+
+      <div class="p-2.5 border-b border-slate-800 space-y-2 bg-slate-925">
+        <div class="relative">
+          <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-500 text-xs"></i>
+          <input id="catalogSearch" type="text" placeholder="Поиск постройки..." class="w-full bg-slate-900 border border-slate-700/80 rounded-lg pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500" />
+          <button id="clearSearchBtn" onclick="clearCatalogSearch()" class="hidden absolute right-2 top-2 text-slate-400 hover:text-white text-xs">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="flex flex-wrap gap-1 items-center" id="categoryFilterBar">
+          <button onclick="setCatalogFilter('all')" data-filter="all" class="cat-pill px-2 py-0.5 rounded text-[11px] font-semibold bg-sky-600 text-white">Все (84)</button>
+          <button onclick="setCatalogFilter('Мифические')" data-filter="Мифические" class="cat-pill px-2 py-0.5 rounded text-[11px] font-medium bg-slate-800 text-amber-300 hover:bg-slate-700">Мифич. (20)</button>
+          <button onclick="setCatalogFilter('Великие')" data-filter="Великие" class="cat-pill px-2 py-0.5 rounded text-[11px] font-medium bg-slate-800 text-purple-300 hover:bg-slate-700">Великие (7)</button>
+          <button onclick="setCatalogFilter('Редкие')" data-filter="Редкие" class="cat-pill px-2 py-0.5 rounded text-[11px] font-medium bg-slate-800 text-sky-300 hover:bg-slate-700">Редкие (12)</button>
+          <button onclick="setCatalogFilter('Необычные')" data-filter="Необычные" class="cat-pill px-2 py-0.5 rounded text-[11px] font-medium bg-slate-800 text-emerald-300 hover:bg-slate-700">Необыч. (9)</button>
+          <button onclick="setCatalogFilter('Декор')" data-filter="Декор" class="cat-pill px-2 py-0.5 rounded text-[11px] font-medium bg-slate-800 text-slate-300 hover:bg-slate-700">Декор (11)</button>
+          <button onclick="setCatalogFilter('Дороги')" data-filter="Дороги" class="cat-pill px-2 py-0.5 rounded text-[11px] font-medium bg-slate-800 text-rose-300 hover:bg-slate-700">Дороги (19)</button>
+          <button onclick="setCatalogFilter('Лес')" data-filter="Лес" class="cat-pill px-2 py-0.5 rounded text-[11px] font-medium bg-slate-800 text-teal-300 hover:bg-slate-700">Лес (7)</button>
+          <button onclick="toggleOnlyAvailable()" id="onlyAvailableBtn" title="Показать только постройки с оставшимся лимитом" class="ml-auto px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-800 text-emerald-400 border border-emerald-500/30 hover:bg-slate-700 transition flex items-center gap-1">
+            <i class="fa-solid fa-filter text-[9px]"></i>
+            <span>Доступные</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="catalogList" class="flex-1 overflow-y-auto p-2 space-y-1.5"></div>
+    </aside>
+
+    <!-- CENTER VIEWPORT -->
+    <main class="flex-1 relative bg-slate-950 overflow-hidden flex flex-col">
+      <div class="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10">
+        <div class="glass-panel px-3 py-1.5 rounded-xl flex items-center gap-3 pointer-events-auto shadow-lg">
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+            <span class="text-xs font-mono font-bold text-sky-300" id="hudCoords">X: --, Y: --</span>
+          </div>
+          <div class="h-3.5 w-px bg-slate-700"></div>
+          <div class="text-xs text-slate-300 truncate max-w-[280px]" id="hudCellInfo">Наведите курсор на сетку острова</div>
+        </div>
+
+        <div class="glass-panel px-2.5 py-1 rounded-xl flex items-center gap-2 pointer-events-auto shadow-lg text-xs">
+          <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
+            <input type="checkbox" id="showGridCheck" checked onchange="requestRender()" class="accent-sky-500 rounded" />
+            <span>Сетка</span>
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
+            <input type="checkbox" id="showAxesCheck" checked onchange="requestRender()" class="accent-purple-500 rounded" />
+            <span>Оси</span>
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
+            <input type="checkbox" id="showLabelsCheck" checked onchange="requestRender()" class="accent-amber-500 rounded" />
+            <span>Подписи</span>
+          </label>
+          <label class="flex items-center gap-1 cursor-pointer text-amber-300 hover:text-amber-200">
+            <input type="checkbox" id="showReservesCheck" checked onchange="requestRender()" class="accent-amber-500 rounded" />
+            <span>Резервы 3×3</span>
+          </label>
+        </div>
+      </div>
+
+      <div id="canvasContainer" class="flex-1 w-full h-full relative">
+        <canvas id="islandCanvas"></canvas>
+      </div>
+
+      <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10">
+        <div class="glass-panel p-1 rounded-xl flex items-center gap-1 pointer-events-auto shadow-lg">
+          <button onclick="focusGridRect(1, 1, 60, 60)" title="Показать весь остров целиком по размеру окна" class="px-2.5 py-1 rounded-lg hover:bg-slate-800 text-[11px] font-medium text-slate-300 hover:text-white transition flex items-center gap-1.5">
+            <i class="fa-solid fa-expand text-sky-400"></i><span>Весь остров</span>
+          </button>
+
+          <div class="h-3.5 w-px bg-slate-700/80 mx-0.5"></div>
+
+          <button onclick="focusGridRect(1, 1, 30, 30)" title="Приблизить Северный сектор (С)" class="px-2 py-1 rounded-lg hover:bg-slate-800 text-[11px] font-medium text-slate-300 hover:text-white transition flex items-center gap-1">
+            <i class="fa-solid fa-compass text-indigo-400 text-[10px]"></i><span>Север</span>
+          </button>
+          <button onclick="focusGridRect(1, 31, 30, 30)" title="Приблизить Западный сектор (З)" class="px-2 py-1 rounded-lg hover:bg-slate-800 text-[11px] font-medium text-slate-300 hover:text-white transition flex items-center gap-1">
+            <i class="fa-solid fa-compass text-emerald-400 text-[10px]"></i><span>Запад</span>
+          </button>
+          <button onclick="focusGridRect(31, 31, 30, 30)" title="Приблизить Южный сектор (Ю)" class="px-2 py-1 rounded-lg hover:bg-slate-800 text-[11px] font-medium text-slate-300 hover:text-white transition flex items-center gap-1">
+            <i class="fa-solid fa-compass text-cyan-400 text-[10px]"></i><span>Юг</span>
+          </button>
+          <button onclick="focusGridRect(31, 1, 30, 30)" title="Приблизить Восточный сектор (В)" class="px-2 py-1 rounded-lg hover:bg-slate-800 text-[11px] font-medium text-slate-300 hover:text-white transition flex items-center gap-1">
+            <i class="fa-solid fa-compass text-amber-400 text-[10px]"></i><span>Восток</span>
+          </button>
+
+          <div class="h-3.5 w-px bg-slate-700/80 mx-0.5"></div>
+
+          <div class="flex items-center bg-slate-900/90 rounded-lg p-0.5 border border-slate-700/70">
+            <button id="myViewBtn" onclick="applyCustomView()" disabled title="Сначала сохраните нужный ракурс кнопкой справа" class="px-2 py-0.5 rounded-md text-[11px] font-medium text-slate-500 opacity-50 cursor-not-allowed transition flex items-center gap-1">
+              <i class="fa-solid fa-Crosshairs text-purple-400"></i><span>Мой вид</span>
+            </button>
+            <button onclick="saveCustomView()" title="Запомнить текущее положение и масштаб камеры для кнопки «Мой вид»" class="px-1.5 py-0.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-amber-400 text-[11px] transition flex items-center justify-center border-l border-slate-800 ml-0.5">
+              <i class="fa-solid fa-bookmark"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="statusToast" class="glass-panel px-3.5 py-1.5 rounded-xl text-xs font-medium text-amber-300 border-amber-500/40 shadow-lg transition-opacity duration-300 opacity-0 pointer-events-none">
+          Готово к работе
+        </div>
+
+        <div class="glass-panel p-1 rounded-xl flex items-center gap-1 pointer-events-auto shadow-lg">
+          <button onclick="zoomBy(0.8)" title="Отдалить" class="w-7 h-7 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition">
+            <i class="fa-solid fa-minus text-xs"></i>
+          </button>
+          <span id="zoomLabel" class="text-[11px] font-mono text-slate-300 px-2 min-w-[52px] text-center">100%</span>
+          <button onclick="zoomBy(1.25)" title="Приблизить" class="w-7 h-7 rounded-lg hover:bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center transition">
+            <i class="fa-solid fa-plus text-xs"></i>
+          </button>
+          <button onclick="resetCamera()" title="Сбросить камеру" class="px-2 h-7 rounded-lg hover:bg-slate-800 text-[11px] text-slate-300 hover:text-white flex items-center justify-center transition">
+            Сброс
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- RIGHT SIDEBAR -->
+    <aside class="w-80 bg-slate-925 border-l border-slate-800 flex flex-col shrink-0 z-20">
+      <div class="p-3 border-b border-slate-800 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Статистика Острова</span>
+          <span id="auditBadge" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            Заполнено
+          </span>
+        </div>
+
+        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800/90 space-y-1.5">
+          <div class="flex justify-between text-xs">
+            <span class="text-slate-400">Занято клеток:</span>
+            <span id="cellsUsedText" class="font-mono font-bold text-white">0 / 3600 (0%)</span>
+          </div>
+          <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden flex">
+            <div id="barBuildings" class="bg-amber-500 h-full transition-all" style="width: 0%"></div>
+            <div id="barRoads" class="bg-sky-500 h-full transition-all" style="width: 0%"></div>
+            <div id="barTrees" class="bg-emerald-500 h-full transition-all" style="width: 0%"></div>
+          </div>
+          <div class="grid grid-cols-3 gap-1 pt-1 text-[10px] text-slate-400">
+            <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-amber-500"></span>Здания: <b id="statBuildingsCells" class="text-slate-200 font-mono">0</b></div>
+            <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-sky-500"></span>Сети: <b id="statRoadsCells" class="text-slate-200 font-mono">0</b></div>
+            <div class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-emerald-500"></span>Лес: <b id="statTreesCells" class="text-slate-200 font-mono">0</b></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800/90 flex flex-col justify-between">
+            <div class="text-[10px] text-slate-400 uppercase">Процветание</div>
+            <div id="statProsperity" class="text-base font-mono font-extrabold text-amber-400 mt-0.5">+0</div>
+            <div id="statUniquePlaced" class="text-[10px] text-slate-400 mt-0.5">Уник. зданий: 0/39</div>
+          </div>
+          <div class="flex flex-col gap-1.5 justify-between">
+            <button onclick="setTool('forest_fill_area')" id="tool-forest_fill_area" title="Кликните на пустую клетку, чтобы заполнить замкнутую область случайным лесом" class="tool-btn flex-1 py-1 px-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-300 text-[10px] font-semibold leading-tight transition flex items-center justify-center gap-1 text-center">
+              <i class="fa-solid fa-tree shrink-0"></i>
+              <span>Авто-лес замкнутой области</span>
+            </button>
+            <button onclick="setTool('forest_clear_area')" id="tool-forest_clear_area" title="Кликните на дерево, чтобы срубить весь лес в этой замкнутой области" class="tool-btn flex-1 py-1 px-2 rounded-lg bg-slate-800 hover:bg-rose-950/60 border border-slate-700 hover:border-rose-500/40 text-slate-300 hover:text-rose-200 text-[10px] font-medium leading-tight transition flex items-center justify-center gap-1 text-center">
+              <i class="fa-solid fa-axe shrink-0"></i>
+              <span>Срубить лес замкнутой области</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex gap-1.5">
+          <button onclick="autoFillEmptyWithForest()" class="flex-1 py-1.5 px-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 text-emerald-300 text-[11px] font-semibold transition flex items-center justify-center gap-1">
+            <i class="fa-solid fa-tree"></i> Авто-лес пустот
+          </button>
+          <button onclick="clearCategory('Лес')" class="py-1.5 px-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-[11px] font-medium transition">
+            Срубить лес
+          </button>
+        </div>
+      </div>
+
+      <div class="flex border-b border-slate-800 bg-slate-900/50 text-xs font-semibold">
+        <button onclick="setRightTab('audit')" id="rtab-audit" class="flex-1 py-2 text-center border-b-2 border-sky-500 text-sky-400">
+          Чек-лист (59)
+        </button>
+        <button onclick="setRightTab('buffs')" id="rtab-buffs" class="flex-1 py-2 text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200">
+          Сводка баффов
+        </button>
+      </div>
+
+      <div id="rightPanelAudit" class="flex-1 overflow-y-auto p-2 space-y-1"></div>
+      <div id="rightPanelBuffs" class="hidden flex-1 overflow-y-auto p-3 space-y-2"></div>
+    </aside>
+  </div>
+
+  <!-- MODALS -->
+  <div id="passportModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-5xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="px-5 py-3.5 bg-slate-925 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-compass-drafting text-amber-400 text-lg"></i>
+          <div>
+            <h2 class="text-sm font-bold text-white">Инженерный Паспорт и Матрица Координат (60×60)</h2>
+            <p class="text-[11px] text-slate-400">Спецификация для игры: лимиты и координаты X/Y</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="copyPassportText()" class="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-xs font-semibold text-white transition flex items-center gap-1.5">
+            <i class="fa-regular fa-copy"></i> Копировать
+          </button>
+          <button onclick="downloadPassportMarkdown()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-download"></i> .MD
+          </button>
+          <button onclick="closePassportModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+      <div class="p-4 flex-1 overflow-y-auto space-y-4 font-mono text-xs bg-slate-950/60" id="passportModalContent"></div>
+    </div>
+  </div>
+
+  <div id="slotsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full flex flex-col shadow-2xl overflow-hidden">
+      <div class="px-5 py-3.5 bg-slate-925 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-floppy-disk text-sky-400"></i>
+          <h2 class="text-sm font-bold text-white">Менеджер Проектов</h2>
+        </div>
+        <button onclick="closeSlotsModal()" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="p-5 space-y-4">
+        <div class="bg-slate-950/80 p-3.5 rounded-xl border border-slate-800 space-y-2">
+          <label class="text-xs font-semibold text-slate-300">Сохранить планировку в браузере:</label>
+          <div class="flex gap-2">
+            <input id="saveSlotNameInput" type="text" placeholder="Название проекта" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sky-500" />
+            <button onclick="saveToLocalSlot()" class="px-4 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-xs font-semibold text-white transition">Сохранить</button>
+          </div>
+        </div>
+        <div class="space-y-2">
+          <div class="text-xs font-semibold text-slate-400">Сохранённые слоты:</div>
+          <div id="savedSlotsContainer" class="space-y-1.5 max-h-56 overflow-y-auto"></div>
+        </div>
+        <div class="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
+          <button onclick="exportProjectJSON()" class="flex-1 py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-file-arrow-down text-sky-400"></i> Скачать .JSON
+          </button>
+          <label class="flex-1 py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <i class="fa-solid fa-file-arrow-up text-amber-400"></i> Загрузить .JSON
+            <input type="file" accept=".json" onchange="importProjectJSON(event)" class="hidden" />
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT -->
+  <script>
+    const CATALOG = [
+      { id: 1, name: "Дерево жизни", w: 5, h: 5, rarity: "Мифические", limit: 1, bonus: 0, buff: "Главное древо", type: "Магазин", color: "#e11d48", imgIcon: "Объекты/Дерево жизни.png", imgBuilding: "Постройки/Дерево жизни_single.png" },
+      { id: 2, name: "Снежный замок", w: 4, h: 4, rarity: "Мифические", limit: 1, bonus: 1200, buff: "Пехота +1%", type: "Магазин", color: "#6366f1", imgIcon: "Объекты/Снежный замок.png", imgBuilding: "Постройки/Снежный замок_single.png" },
+      { id: 3, name: "Обзорная площадка", w: 3, h: 3, rarity: "Мифические", limit: 1, bonus: 1000, buff: "Стрелки +1%", type: "Магазин", color: "#f59e0b", imgIcon: "Объекты/Обзорная площадка.png", imgBuilding: "Постройки/Обзорная площадка_single.png" },
+      { id: 4, name: "Амфитеатр", w: 3, h: 3, rarity: "Мифические", limit: 1, bonus: 1000, buff: "Копейщики +1%", type: "Магазин", color: "#d97706", imgIcon: "Объекты/Амфитеатр.png", imgBuilding: "Постройки/Амфитеатр_single.png" },
+      { id: 5, name: "Элегантная вилла", w: 3, h: 3, rarity: "Мифические", limit: 1, bonus: 1000, buff: "Копейщики +1%", type: "Магазин", color: "#8b5cf6", imgIcon: "Объекты/Элегантная вилла.png", imgBuilding: "Постройки/Элегантная вилла_single.png" },
+      { id: 6, name: "Художественная галерея", w: 3, h: 3, rarity: "Мифические", limit: 1, bonus: 1000, buff: "Стрелки +1%", type: "Магазин", color: "#ec4899", imgIcon: "Объекты/Художественная галерея.png", imgBuilding: "Постройки/Художественная галерея_single.png" },
+      { id: 7, name: "Плавучий рынок", w: 5, h: 5, rarity: "Мифические", limit: 1, bonus: 1000, buff: "Пехота +1%", type: "Магазин", color: "#0ea5e9", imgIcon: "Объекты/Плавучий рынок.png", imgBuilding: "Постройки/Плавучий рынок_single.png" },
+      { id: 8, name: "Зловещее дерево", w: 3, h: 3, rarity: "Мифические", limit: 1, bonus: 1000, buff: "Атака войск +1%", type: "Магазин", color: "#9333ea", imgIcon: "Объекты/Зловещее дерево.png", imgBuilding: "Постройки/Зловещее дерево_single.png" },
+      { id: 9, name: "Сказочный аквариум", w: 3, h: 3, rarity: "Мифические", limit: 1, bonus: 1000, buff: "Защита войск +1%", type: "Ивент", color: "#06b6d4", imgIcon: "Объекты/Сказочный аквариум.png", imgBuilding: "Постройки/Сказочный аквариум_single.png" },
+      { id: 10, name: "Снегоуборочная арена", w: 3, h: 3, rarity: "Мифические", limit: 1, bonus: 1000, buff: "Атака войск +1%", type: "Ивент", color: "#3b82f6", imgIcon: "Объекты/Снегоуборочная арена.png", imgBuilding: "Постройки/Снегоуборочная арена_single.png" },
+      { id: 11, name: "Цитадель света", w: 3, h: 3, rarity: "Мифические", limit: 1, bonus: 1000, buff: "Атака войск +1%", type: "Ивент", color: "#eab308", imgIcon: "Объекты/Цитадель света.png", imgBuilding: "Постройки/Цитадель света_single.png" },
+      { id: 12, name: "Лыжный курорт", w: 3, h: 3, rarity: "Мифические", limit: 1, bonus: 500, buff: "Скорость тренировок +3%", type: "Будет позже", color: "#38bdf8", imgIcon: "Объекты/Лыжный курорт.png", imgBuilding: "Постройки/Лыжный курорт_single.png" },
+      { id: 13, name: "Каток", w: 3, h: 3, rarity: "Мифические", limit: 1, bonus: 500, buff: "Скорость исследований +2%", type: "Будет позже", color: "#7dd3fc", imgIcon: "Объекты/Каток.png", imgBuilding: "Постройки/Каток_single.png" },
+      { id: 14, name: "Гнездо мечты", w: 3, h: 3, rarity: "Мифические", limit: 1, bonus: 1000, buff: "Защита войск +1%", type: "Ивент", color: "#fb923c", imgIcon: "Объекты/Гнездо мечты.png", imgBuilding: "Постройки/Гнездо мечты_single.png" },
+      { id: 15, name: "Огромный рог", w: 3, h: 3, rarity: "Мифические", limit: 1, bonus: 2000, buff: "Атака войск +2%", type: "Будет позже", color: "#dc2626", imgIcon: "Объекты/Огромный рог.png", imgBuilding: "Постройки/Огромный рог_single.png" },
+      { id: 16, name: "Яростный морской форт", w: 5, h: 3, rarity: "Мифические", limit: 1, bonus: 1000, buff: "Защита войск +1%", type: "Магазин", color: "#b45309", rotatable: true, folderName: "Яростный морской форт", imgIcon: "Объекты/Яростный морской форт.png", imgBuilding: "Постройки/Яростный морской форт_single.png" },      { id: 17, name: "Грибное царство", w: 3, h: 3, rarity: "Мифические", limit: 1, bonus: 1000, buff: "Защита войск +1%", type: "Ивент", color: "#2dd4bf", imgIcon: "Объекты/Грибное царство.png", imgBuilding: "Постройки/Грибное царство_single.png" },
+      { id: 18, name: "Морской рай", w: 3, h: 3, rarity: "Мифические", limit: 1, bonus: 1000, buff: "Защита войск +1%", type: "Будет позже", color: "#22d3ee", imgIcon: "Объекты/Морской рай.png", imgBuilding: "Постройки/Морской рай_single.png" },
+      { id: 19, name: "Обильный пир", w: 3, h: 3, rarity: "Мифические", limit: 1, bonus: 1000, buff: "Атака войск +1%", type: "Будет позже", color: "#ea580c", imgIcon: "Объекты/Обильный пир.png", imgBuilding: "Постройки/Обильный пир_single.png" },
+      { id: 20, name: "Грузовик в тундре", w: 3, h: 3, rarity: "Мифические", limit: 1, bonus: 1000, buff: "Защита войск +1%", type: "Будет позже", color: "#ca8a04", imgIcon: "Объекты/Грузовик в тундре.png", imgBuilding: "Постройки/Грузовик в тундре_single.png" },
+
+      // --- ВЕЛИКИЕ (7) ---
+      { id: 21, name: "Деревенская мельница", w: 3, h: 3, rarity: "Великие", limit: 1, bonus: 500, buff: "Пехота +0,5%", type: "Магазин", color: "#a855f7", imgIcon: "Объекты/Деревенская мельница.png", imgBuilding: "Постройки/Деревенская мельница_single.png" },
+      { id: 22, name: "Хрустальный сад", w: 3, h: 3, rarity: "Великие", limit: 1, bonus: 500, buff: "Копейщики +0,5%", type: "Магазин", color: "#c084fc", imgIcon: "Объекты/Хрустальный сад.png", imgBuilding: "Постройки/Хрустальный сад_single.png" },
+      { id: 23, name: "Часовая хижина", w: 3, h: 3, rarity: "Великие", limit: 1, bonus: 500, buff: "Стрелки +0,5%", type: "Магазин", color: "#9333ea", imgIcon: "Объекты/Часовая хижина.png", imgBuilding: "Постройки/Часовая хижина_single.png" },
+      { id: 24, name: "Теплица", w: 3, h: 3, rarity: "Великие", limit: 1, bonus: 500, buff: "Пехота +0,5%", type: "Магазин", color: "#4ade80", imgIcon: "Объекты/Теплица.png", imgBuilding: "Постройки/Теплица_single.png" },
+      { id: 25, name: "Дубовая таверна", w: 3, h: 3, rarity: "Великие", limit: 1, bonus: 500, buff: "Строительство +1,2%", type: "Магазин", color: "#b45309", imgIcon: "Объекты/Дубовая таверна.png", imgBuilding: "Постройки/Дубовая таверна_single.png" },
+      { id: 26, name: "Домик моряка", w: 3, h: 3, rarity: "Великие", limit: 1, bonus: 500, buff: "Копейщики +0,5%", type: "Магазин", color: "#60a5fa", imgIcon: "Объекты/Домик моряка.png", imgBuilding: "Постройки/Домик моряка_single.png" },
+      { id: 27, name: "Рыбацкий домик", w: 3, h: 3, rarity: "Великие", limit: 1, bonus: 500, buff: "Стрелки +0,5%", type: "Магазин", color: "#38bdf8", imgIcon: "Объекты/Рыбацкий домик.png", imgBuilding: "Постройки/Рыбацкий домик_single.png" },
+
+      // --- РЕДКИЕ (12) ---
+      { id: 28, name: "Шумный базар", w: 3, h: 3, rarity: "Редкие", limit: 1, bonus: 200, buff: "Сбор ресурсов +2%", type: "Магазин", color: "#0284c7", imgIcon: "Объекты/Шумный базар.png", imgBuilding: "Постройки/Шумный базар_single.png" },
+      { id: 29, name: "Элитный ресторан", w: 3, h: 3, rarity: "Редкие", limit: 1, bonus: 200, buff: "Сбор мяса +6%", type: "Магазин", color: "#0369a1", imgIcon: "Объекты/Элитный ресторан.png", imgBuilding: "Постройки/Элитный ресторан_single.png" },
+      { id: 30, name: "Секрет цветка", w: 2, h: 2, rarity: "Редкие", limit: 1, bonus: 200, buff: "Сбор дерева +6%", type: "Магазин", color: "#0d9488", imgIcon: "Объекты/Секрет цветка.png", imgBuilding: "Постройки/Секрет цветка_single.png" },
+      { id: 31, name: "Маленькая печь", w: 2, h: 2, rarity: "Редкие", limit: 1, bonus: 200, buff: "Сбор угля +6%", type: "Магазин", color: "#0891b2", imgIcon: "Объекты/Маленькая печь.png", imgBuilding: "Постройки/Маленькая печь_single.png" },
+      { id: 32, name: "Кузнец", w: 3, h: 3, rarity: "Редкие", limit: 1, bonus: 200, buff: "Сбор железа +6%", type: "Магазин", color: "#0284c7", imgIcon: "Объекты/Кузнец.png", imgBuilding: "Постройки/Кузнец_single.png" },
+      { id: 33, name: "Фонтан радости", w: 2, h: 2, rarity: "Редкие", limit: 1, bonus: 200, buff: "Строительство +0,8%", type: "Магазин", color: "#2563eb", imgIcon: "Объекты/Фонтан радости.png", imgBuilding: "Постройки/Фонтан радости_single.png" },
+      { id: 34, name: "Природный горячий источник", w: 2, h: 2, rarity: "Редкие", limit: 1, bonus: 200, buff: "Исследования +0,8%", type: "Магазин", color: "#06b6d4", imgIcon: "Объекты/Природный горячий источник.png", imgBuilding: "Постройки/Природный горячий источник_single.png" },
+      { id: 35, name: "Стойка с барбекю", w: 2, h: 2, rarity: "Редкие", limit: 1, bonus: 200, buff: "Тренировки +1%", type: "Магазин", color: "#ea580c", imgIcon: "Объекты/Стойка с барбекю.png", imgBuilding: "Постройки/Стойка с барбекю_single.png" },
+      { id: 36, name: "Сверкающая ледяная скульптура", w: 2, h: 2, rarity: "Редкие", limit: 1, bonus: 200, buff: "Марш охоты +2%", type: "Магазин", color: "#38bdf8", imgIcon: "Объекты/Сверкающая ледяная скульптура.png", imgBuilding: "Постройки/Сверкающая ледяная скульптура_single.png" },
+      { id: 37, name: "Пост на скале", w: 2, h: 2, rarity: "Редкие", limit: 1, bonus: 200, buff: "Скорость войск +2%", type: "Магазин", color: "#64748b", imgIcon: "Объекты/Пост на скале.png", imgBuilding: "Постройки/Пост на скале_single.png" },
+      { id: 38, name: "Пивоварня", w: 3, h: 3, rarity: "Редкие", limit: 1, bonus: 200, buff: "Лечение +2%", type: "Магазин", color: "#4f46e5", imgIcon: "Объекты/Пивоварня.png", imgBuilding: "Постройки/Пивоварня_single.png" },
+      { id: 39, name: "Базовый док", w: 3, h: 3, rarity: "Редкие", limit: 1, bonus: 200, buff: "Вместимость отправки +200", type: "Магазин", color: "#1d4ed8", imgIcon: "Объекты/Базовый док.png", imgBuilding: "Постройки/Базовый док_single.png" },
+
+      // --- НЕОБЫЧНЫЕ (9) ---
+      { id: 40, name: "Изысканное вино", w: 2, h: 2, rarity: "Необычные", limit: 2, bonus: 100, buff: "Нет", type: "Магазин", color: "#16a34a", imgIcon: "Объекты/Изысканное вино.png", imgBuilding: "Постройки/Изысканное вино_single.png" },
+      { id: 41, name: "Деревянная горка", w: 2, h: 2, rarity: "Необычные", limit: 2, bonus: 100, buff: "Нет", type: "Магазин", color: "#15803d", imgIcon: "Объекты/Деревянная горка.png", imgBuilding: "Постройки/Деревянная горка_single.png" },
+      { id: 42, name: "Караван торговцев", w: 2, h: 2, rarity: "Необычные", limit: 2, bonus: 100, buff: "Нет", type: "Магазин", color: "#22c55e", imgIcon: "Объекты/Караван торговцев.png", imgBuilding: "Постройки/Караван торговцев_single.png" },
+      { id: 43, name: "Базовый дом фермера", w: 2, h: 2, rarity: "Необычные", limit: 4, bonus: 100, buff: "Нет", type: "Магазин", color: "#65a30d", imgIcon: "Объекты/Базовый дом фермера.png", imgBuilding: "Постройки/Базовый дом фермера_single.png" },
+      { id: 44, name: "Дом на несколько семей", w: 2, h: 2, rarity: "Необычные", limit: 4, bonus: 100, buff: "Нет", type: "Магазин", color: "#4d7c0f", imgIcon: "Объекты/Дом на несколько семей.png", imgBuilding: "Постройки/Дом на несколько семей_single.png" },
+      { id: 45, name: "Пышный куст", w: 1, h: 1, rarity: "Необычные", limit: 5, bonus: 100, buff: "Нет", type: "Магазин", color: "#15803d", imgIcon: "Объекты/Пышный куст.png", imgBuilding: "Постройки/Пышный куст_single.png" },
+      { id: 46, name: "Изящная изгородь", w: 1, h: 1, rarity: "Необычные", limit: 5, bonus: 100, buff: "Нет", type: "Магазин", color: "#166534", imgIcon: "Объекты/Изящная изгородь.png", imgBuilding: "Постройки/Изящная изгородь_single.png" },
+      { id: 47, name: "Флаг воина", w: 1, h: 1, rarity: "Необычные", limit: 5, bonus: 100, buff: "Нет", type: "Магазин", color: "#2563eb", imgIcon: "Объекты/Флаг воина.png", imgBuilding: "Постройки/Флаг воина_single.png" },
+      { id: 48, name: "Бассейн с подогревом", w: 1, h: 1, rarity: "Необычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "water", folderName: "Бассейн с подогревом", color: "#0284c7", imgIcon: "Объекты/Бассейн с подогревом.png", imgBuilding: "Постройки/Бассейн с подогревом_single.png" },
+
+      // --- ОБЫЧНЫЕ: ДЕКОР (11) ---
+      { id: 49, name: "Куча груза", w: 1, h: 1, rarity: "Обычные", limit: 2, bonus: 50, buff: "Нет", type: "Декор", color: "#9ca3af", imgIcon: "Объекты/Куча груза.png", imgBuilding: "Постройки/Куча груза_single.png" },
+      { id: 50, name: "Базовая плита", w: 1, h: 1, rarity: "Обычные", limit: 2, bonus: 50, buff: "Нет", type: "Декор", color: "#6b7280", imgIcon: "Объекты/Базовая плита.png", imgBuilding: "Постройки/Базовая плита_single.png" },
+      { id: 51, name: "Городская доска объявлений", w: 1, h: 1, rarity: "Обычные", limit: 2, bonus: 50, buff: "Нет", type: "Декор", color: "#a16207", imgIcon: "Объекты/Городская доска объявлений.png", imgBuilding: "Постройки/Городская доска объявлений_single.png" },
+      { id: 52, name: "Иглу", w: 1, h: 1, rarity: "Обычные", limit: 2, bonus: 50, buff: "Нет", type: "Декор", color: "#93c5fd", imgIcon: "Объекты/Иглу.png", imgBuilding: "Постройки/Иглу_single.png" },
+      { id: 53, name: "Снеговик", w: 1, h: 1, rarity: "Обычные", limit: 2, bonus: 50, buff: "Нет", type: "Декор", color: "#e2e8f0", imgIcon: "Объекты/Снеговик.png", imgBuilding: "Постройки/Снеговик_single.png" },
+      { id: 54, name: "Палатка для отдыха", w: 1, h: 1, rarity: "Обычные", limit: 2, bonus: 50, buff: "Нет", type: "Декор", color: "#d97706", imgIcon: "Объекты/Палатка для отдыха.png", imgBuilding: "Постройки/Палатка для отдыха_single.png" },
+      { id: 55, name: "Костёр", w: 1, h: 1, rarity: "Обычные", limit: 2, bonus: 50, buff: "Нет", type: "Декор", color: "#ef4444", imgIcon: "Объекты/Костёр.png", imgBuilding: "Постройки/Костёр_single.png" },
+      { id: 56, name: "Дворовая скамейка", w: 1, h: 1, rarity: "Обычные", limit: 4, bonus: 50, buff: "Нет", type: "Декор", color: "#b45309", imgIcon: "Объекты/Дворовая скамейка.png", imgBuilding: "Постройки/Дворовая скамейка_single.png" },
+      { id: 57, name: "Качели", w: 1, h: 1, rarity: "Обычные", limit: 4, bonus: 50, buff: "Нет", type: "Декор", color: "#92400e", imgIcon: "Объекты/Качели.png", imgBuilding: "Постройки/Качели_single.png" },
+      { id: 58, name: "Дворовый стол и стул", w: 1, h: 1, rarity: "Обычные", limit: 4, bonus: 50, buff: "Нет", type: "Декор", color: "#78350f", imgIcon: "Объекты/Дворовый стол и стул.png", imgBuilding: "Постройки/Дворовый стол и стул_single.png" },
+      { id: 59, name: "Уличный фонарь", w: 1, h: 1, rarity: "Обычные", limit: 199, bonus: 0, buff: "Нет", type: "Декор", color: "#facc15", imgIcon: "Объекты/Уличный фонарь.png", imgBuilding: "Постройки/Уличный фонарь_single.png" },
+
+      // --- СОЕДИНЯЕМЫЕ ДОРОГИ, ЗАБОРЫ И КЛУМБЫ (18) ---
+      { id: 60, name: "Городской тротуар", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "road", folderName: "Городской тротуар", color: "#94a3b8", imgIcon: "Объекты/Городской тротуар.png", imgBuilding: "Постройки/Городской тротуар_single.png" },
+      { id: 61, name: "Городская тропа", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "road", folderName: "Городская тропа", color: "#64748b", imgIcon: "Объекты/Городская тропа.png", imgBuilding: "Постройки/Городская тропа_single.png" },
+      { id: 62, name: "Безмятежная тропа", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "road", folderName: "Безмятежная тропа", color: "#cbd5e1", imgIcon: "Объекты/Безмятежная тропа.png", imgBuilding: "Постройки/Безмятежная тропа_single.png" },
+      { id: 63, name: "Очарованная тропа", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "road", folderName: "Очарованная тропа", color: "#a8a29e", imgIcon: "Объекты/Очарованная тропа.png", imgBuilding: "Постройки/Очарованная тропа_single.png" },
+      { id: 64, name: "Праздничная каменная кладка", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "road", folderName: "Праздничная каменная кладка", color: "#78716c", imgIcon: "Объекты/Праздничная каменная кладка.png", imgBuilding: "Постройки/Праздничная каменная кладка_single.png" },
+      { id: 65, name: "Путь цветка", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "flora", folderName: "Путь цветка", color: "#fda4af", imgIcon: "Объекты/Путь цветка.png", imgBuilding: "Постройки/Путь цветка_single.png" },
+      { id: 66, name: "Роскошная элегия", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "hedge", folderName: "Роскошная элегия", color: "#15803d", imgIcon: "Объекты/Роскошная элегия.png", imgBuilding: "Постройки/Роскошная элегия_single.png" },
+      { id: 67, name: "Фиолетовая фантазия", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "flora", folderName: "Фиолетовая фантазия", color: "#a855f7", imgIcon: "Объекты/Фиолетовая фантазия.png", imgBuilding: "Постройки/Фиолетовая фантазия_single.png" },
+      { id: 68, name: "Песнь солнца", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "flora", folderName: "Песнь солнца", color: "#eab308", imgIcon: "Объекты/Песнь солнца.png", imgBuilding: "Постройки/Песнь солнца_single.png" },
+      { id: 69, name: "Серенада роз", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет (Резерв 3×3)", type: "Дороги", connectable: true, netKind: "flora", folderName: "Серенада роз", color: "#f43f5e", imgIcon: "Объекты/Серенада роз.png", imgBuilding: "Постройки/Серенада роз_single.png" },
+      { id: 70, name: "Палисад", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "fence", folderName: "Палисад", color: "#854d0e", imgIcon: "Объекты/Палисад.png", imgBuilding: "Постройки/Палисад_single.png" },
+      { id: 71, name: "Праздничный палисад", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "fence", folderName: "Праздничный палисад", color: "#3b82f6", imgIcon: "Объекты/Праздничный палисад.png", imgBuilding: "Постройки/Праздничный палисад_single.png" },
+      { id: 72, name: "Лазурная изгородь", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "hedge", folderName: "Лазурная изгородь", color: "#06b6d4", imgIcon: "Объекты/Лазурная изгородь.png", imgBuilding: "Постройки/Лазурная изгородь_single.png" },
+      { id: 73, name: "Танец весны", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "flora", folderName: "Танец весны", color: "#10b981", imgIcon: "Объекты/Танец весны.png", imgBuilding: "Постройки/Танец весны_single.png" },
+      { id: 74, name: "Мраморный забор", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "fence", folderName: "Мраморный забор", color: "#e2e8f0", imgIcon: "Объекты/Мраморный забор.png", imgBuilding: "Постройки/Мраморный забор_single.png" },
+      { id: 75, name: "Душа шепчущего ветра", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "hedge", folderName: "Душа шепчущего ветра", color: "#84cc16", imgIcon: "Объекты/Душа шепчущего ветра.png", imgBuilding: "Постройки/Душа шепчущего ветра_single.png" },
+      { id: 76, name: "Тоска зари", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "flora", folderName: "Тоска зари", color: "#f9a8d4", imgIcon: "Объекты/Тоска зари.png", imgBuilding: "Постройки/Тоска зари_single.png" },
+      { id: 77, name: "Свет в ночи", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Дороги", connectable: true, netKind: "fence", folderName: "Свет в ночи", color: "#fbbf24", imgIcon: "Объекты/Свет в ночи.png", imgBuilding: "Постройки/Свет в ночи_single.png" },
+
+      // --- РАСТИТЕЛЬНОСТЬ (7) ---
+      { id: 78, name: "Снежная роща", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Лес", color: "#f59e0b", imgIcon: "Объекты/Снежная роща.png", imgBuilding: "Постройки/Снежная роща.png" },
+      { id: 79, name: "Морозное дерево", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Лес", color: "#38bdf8", imgIcon: "Объекты/Морозное дерево.png", imgBuilding: "Постройки/Морозное дерево.png" },
+      { id: 80, name: "Сосна-1", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Лес", color: "#065f46", imgIcon: "Объекты/Сосна-1.png", imgBuilding: "Постройки/Сосна-1_single.png" },
+      { id: 81, name: "Сосна-2", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Лес", color: "#047857", imgIcon: "Объекты/Сосна-2.png", imgBuilding: "Постройки/Сосна-2_single.png" },
+      { id: 82, name: "Сосна-3", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Лес", color: "#059669", imgIcon: "Объекты/Сосна-3.png", imgBuilding: "Постройки/Сосна-3_single.png" },
+      { id: 83, name: "Сосна-4", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Лес", color: "#10b981", imgIcon: "Объекты/Сосна-4.png", imgBuilding: "Постройки/Сосна-4_single.png" },
+      { id: 84, name: "Сосна-5", w: 1, h: 1, rarity: "Обычные", limit: 499, bonus: 0, buff: "Нет", type: "Лес", color: "#34d399", imgIcon: "Объекты/Сосна-5.png", imgBuilding: "Постройки/Сосна-5_single.png" }
+    ];
+
+    const ITEM_BY_ID = {};
+    const ITEM_BY_NAME = {};
+    const imageCache = {};
+
+CATALOG.forEach(it => {
+      ITEM_BY_ID[it.id] = it;
+      ITEM_BY_NAME[it.name] = it;
+
+      if (it.imgIcon) {
+        const img = new Image();
+        img.src = it.imgIcon;
+        imageCache[it.imgIcon] = img;
+      }
+      if (it.imgBuilding) {
+        const img = new Image();
+        img.src = it.imgBuilding;
+        imageCache[it.imgBuilding] = img;
+      }
+      if (it.connectable && it.folderName) {
+        const nameNoSpaces = it.folderName.replace(/\s+/g, '');
+        const nameHyphen = it.folderName.replace(/\s+/g, '-');
+        
+        ['block', 'enw', 'esw', 'nes', 'nws', 'single'].forEach(sfx => {
+          // Пробуем все варианты написания, которые могут встретиться в папке Соединения
+          [
+            `Постройки/Соединения/${it.folderName}_${sfx}.png`,
+            `Постройки/Соединения/${nameNoSpaces}_${sfx}.png`,
+            `Постройки/Соединения/${nameHyphen}_${sfx}.png`
+          ].forEach(p => {
+            const img = new Image();
+            img.src = p;
+            imageCache[p] = img;
+          });
+        });
+      }
+    });
+
+    const GRID_SIZE = 60;
+    const ISO_DX = 31;
+    const ISO_DY = 21.92;
+    
+    let state = {
+      projectName: "Северная Гавань V10",
+      viewMode: 'iso',
+      tool: 'brush',
+      symmetry: 'none',
+      selectedItemId: 1,
+      catalogFilter: 'all',
+      onlyAvailable: false,
+      catalogSearch: '',
+      rightTab: 'audit',
+      placements: new Map(),
+      grid: Array.from({ length: GRID_SIZE + 1 }, () => new Int32Array(GRID_SIZE + 1)),
+      nextUid: 1,
+      counts: {},
+      reserves: []
+    };
+
+    CATALOG.forEach(it => state.counts[it.id] = 0);
+
+    const historyStack = [];
+    const redoStack = [];
+    const MAX_HISTORY = 35;
+
+    const camera = { x: 0, y: 0, zoom: 0.55 };
+    let pointer = { screenX: 0, screenY: 0, gridX: null, gridY: null, isDown: false, button: 0, isPanning: false, panStartX: 0, panStartY: 0, camStartX: 0, camStartY: 0, dragStartGrid: null };
+
+    function resetGridState() {
+      state.placements.clear();
+      for (let y = 1; y <= GRID_SIZE; y++) state.grid[y].fill(0);
+      state.nextUid = 1;
+      CATALOG.forEach(it => state.counts[it.id] = 0);
+      state.reserves = [];
+    }
+
+    function cloneSnapshot() {
+      const list = [];
+      for (const p of state.placements.values()) {
+        list.push({ itemId: p.itemId, x: p.x, y: p.y, w: p.w, h: p.h });
+      }
+      return { projectName: state.projectName, list, reserves: JSON.parse(JSON.stringify(state.reserves)) };
+    }
+
+    function pushHistory() {
+      historyStack.push(cloneSnapshot());
+      if (historyStack.length > MAX_HISTORY) historyStack.shift();
+      redoStack.length = 0;
+      updateUndoRedoButtons();
+    }
+
+    function restoreSnapshot(snap) {
+      resetGridState();
+      state.projectName = snap.projectName || state.projectName;
+      state.reserves = JSON.parse(JSON.stringify(snap.reserves || []));
+      for (const item of snap.list) {
+        placeObjectDirect(item.itemId, item.x, item.y, item.w, item.h, true);
+      }
+      detectReserveBlocks();
+      refreshAllUI();
+      requestRender();
+    }
+
+    function undo() {
+      if (historyStack.length === 0) return;
+      redoStack.push(cloneSnapshot());
+      restoreSnapshot(historyStack.pop());
+      updateUndoRedoButtons();
+      refreshAllUI();
+      requestRender();
+    }
+
+    function redo() {
+      if (redoStack.length === 0) return;
+      historyStack.push(cloneSnapshot());
+      restoreSnapshot(redoStack.pop());
+      updateUndoRedoButtons();
+      refreshAllUI();
+      requestRender();
+    }
+
+    function updateUndoRedoButtons() {
+      document.getElementById('undoBtn').disabled = historyStack.length === 0;
+      document.getElementById('redoBtn').disabled = redoStack.length === 0;
+    }
+
+    function isInsideGrid(x, y, w = 1, h = 1) {
+      return x >= 1 && y >= 1 && (x + w - 1) <= GRID_SIZE && (y + h - 1) <= GRID_SIZE;
+    }
+
+    function removeUid(uid) {
+      const p = state.placements.get(uid);
+      if (!p) return;
+      for (let cy = p.y; cy < p.y + p.h; cy++) {
+        for (let cx = p.x; cx < p.x + p.w; cx++) {
+          if (state.grid[cy][cx] === uid) state.grid[cy][cx] = 0;
+        }
+      }
+      state.placements.delete(uid);
+      state.counts[p.itemId] = Math.max(0, (state.counts[p.itemId] || 0) - 1);
+    }
+
+    function placeObjectDirect(itemId, x, y, w, h, allowOverwrite = true) {
+      const item = ITEM_BY_ID[itemId];
+      if (!item) return { ok: false };
+      w = w || item.w; h = h || item.h;
+      if (!isInsideGrid(x, y, w, h)) return { ok: false };
+
+      const overlappingUids = new Set();
+      for (let cy = y; cy < y + h; cy++) {
+        for (let cx = x; cx < x + w; cx++) {
+          const uid = state.grid[cy][cx];
+          if (uid !== 0) overlappingUids.add(uid);
+        }
+      }
+
+      if (w === 1 && h === 1 && overlappingUids.size === 1) {
+        const existingUid = [...overlappingUids][0];
+        const existing = state.placements.get(existingUid);
+        if (existing && existing.itemId === itemId) return { ok: true, skipped: true };
+      }
+
+      if (overlappingUids.size > 0 && !allowOverwrite) return { ok: false };
+
+      let sameItemRemoved = 0;
+      overlappingUids.forEach(uid => {
+        const p = state.placements.get(uid);
+        if (p && p.itemId === itemId) sameItemRemoved++;
+      });
+
+      if ((state.counts[itemId] || 0) - sameItemRemoved >= item.limit) return { ok: false };
+
+      overlappingUids.forEach(uid => removeUid(uid));
+
+      const uid = state.nextUid++;
+      const record = { uid, itemId, x, y, w, h };
+      state.placements.set(uid, record);
+      for (let cy = y; cy < y + h; cy++) {
+        for (let cx = x; cx < x + w; cx++) {
+          state.grid[cy][cx] = uid;
+        }
+      }
+      state.counts[itemId] = (state.counts[itemId] || 0) + 1;
+      return { ok: true, uid };
+    }
+
+    function getSymmetryTargets(x, y, w, h, symMode = state.symmetry) {
+      const targets = [{ x, y, w, h }];
+      const mx = GRID_SIZE - x - w + 2;
+      const my = GRID_SIZE - y - h + 2;
+      if (symMode === 'x' || symMode === 'quad') if (mx !== x) targets.push({ x: mx, y, w, h });
+      if (symMode === 'y' || symMode === 'quad') if (my !== y) targets.push({ x, y: my, w, h });
+      if (symMode === 'quad') if (mx !== x && my !== y) targets.push({ x: mx, y: my, w, h });
+      return targets;
+    }
+
+    function placeWithSymmetry(itemId, x, y, w, h) {
+      const overwrite = document.getElementById('overwriteToggle').checked;
+      const targets = getSymmetryTargets(x, y, w, h, state.symmetry);
+      let placedAny = false;
+      for (const t of targets) {
+        const res = placeObjectDirect(itemId, t.x, t.y, t.w, t.h, overwrite);
+        if (res.ok && !res.skipped) placedAny = true;
+      }
+      return placedAny;
+    }
+
+    function detectReserveBlocks() {
+      const roseId = 69;
+      const used = Array.from({ length: GRID_SIZE + 1 }, () => new Uint8Array(GRID_SIZE + 1));
+      const found = [];
+      for (let y = 1; y <= GRID_SIZE - 2; y++) {
+        for (let x = 1; x <= GRID_SIZE - 2; x++) {
+          let isBlock = true;
+          for (let dy = 0; dy < 3 && isBlock; dy++) {
+            for (let dx = 0; dx < 3; dx++) {
+              if (used[y + dy][x + dx]) { isBlock = false; break; }
+              const uid = state.grid[y + dy][x + dx];
+              const p = state.placements.get(uid);
+              if (!p || p.itemId !== roseId) { isBlock = false; break; }
+            }
+          }
+          if (isBlock) {
+            for (let dy = 0; dy < 3; dy++) for (let dx = 0; dx < 3; dx++) used[y + dy][x + dx] = 1;
+            found.push({ x, y, w: 3, h: 3 });
+          }
+        }
+      }
+      state.reserves = found.slice(0, 6);
+    }
+
+    // =========================================================================
+    // PROGRAMMATIC PRESET CITIES
+    // =========================================================================
+    function fillRectArea(itemId, x1, y1, x2, y2, overwrite = false) {
+      const minX = Math.max(1, Math.min(x1, x2));
+      const maxX = Math.min(GRID_SIZE, Math.max(x1, x2));
+      const minY = Math.max(1, Math.min(y1, y2));
+      const maxY = Math.min(GRID_SIZE, Math.max(y1, y2));
+      for (let y = minY; y <= maxY; y++) {
+        for (let x = minX; x <= maxX; x++) {
+          placeObjectDirect(itemId, x, y, 1, 1, overwrite);
+        }
+      }
+    }
+
+    function fillFrameRect(itemId, x1, y1, x2, y2, overwrite = false) {
+      const minX = Math.max(1, Math.min(x1, x2));
+      const maxX = Math.min(GRID_SIZE, Math.max(x1, x2));
+      const minY = Math.max(1, Math.min(y1, y2));
+      const maxY = Math.min(GRID_SIZE, Math.max(y1, y2));
+      for (let x = minX; x <= maxX; x++) {
+        placeObjectDirect(itemId, x, minY, 1, 1, overwrite);
+        placeObjectDirect(itemId, x, maxY, 1, 1, overwrite);
+      }
+      for (let y = minY + 1; y <= maxY - 1; y++) {
+        placeObjectDirect(itemId, minX, y, 1, 1, overwrite);
+        placeObjectDirect(itemId, maxX, y, 1, 1, overwrite);
+      }
+    }
+
+    function fillRemainingCellsGuaranteed(style = 'nord') {
+      const forestRotation = style === 'venetian'
+        ? [80, 81, 82, 83, 84, 78, 79, 65, 67, 73, 76, 66]
+        : [80, 81, 82, 83, 84, 79, 78, 75, 66, 73, 62, 63];
+
+      for (let y = 1; y <= GRID_SIZE; y++) {
+        for (let x = 1; x <= GRID_SIZE; x++) {
+          if (state.grid[y][x] !== 0) continue;
+          const dist = Math.max(Math.abs(x - 30.5), Math.abs(y - 30.5));
+          const bandIndex = Math.floor((dist + ((x + y) % 3)) / 4) % forestRotation.length;
+
+          let placed = false;
+          for (let offset = 0; offset < forestRotation.length; offset++) {
+            const candidateId = forestRotation[(bandIndex + offset) % forestRotation.length];
+            if ((state.counts[candidateId] || 0) < ITEM_BY_ID[candidateId].limit) {
+              placeObjectDirect(candidateId, x, y, 1, 1, false);
+              placed = true;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    function placeAllUniqueBuildingsMasterplan(presetType) {
+      resetGridState();
+      if (presetType === 'empty_island') {
+        state.projectName = "Чистый Остров (С нуля)";
+        detectReserveBlocks();
+        refreshAllUI();
+        requestRender();
+        return;
+      }
+
+      if (presetType === 'nord_harbor') {
+        state.projectName = "Северная Гавань V10 (Осевая Классика)";
+        fillFrameRect(74, 25, 25, 36, 36, true);
+        fillFrameRect(48, 26, 26, 35, 35, true);
+        fillRectArea(64, 27, 27, 34, 34, true);
+        placeObjectDirect(1, 28, 28, 5, 5, true);
+
+        fillRectArea(69, 29, 19, 31, 21, true);
+        fillRectArea(69, 19, 29, 21, 31, true);
+        fillRectArea(69, 40, 29, 42, 31, true);
+        state.reserves = [
+          { x: 29, y: 19, w: 3, h: 3 },
+          { x: 19, y: 29, w: 3, h: 3 },
+          { x: 40, y: 29, w: 3, h: 3 }
+        ];
+
+        placeObjectDirect(2, 29, 7, 4, 4, true);
+        placeObjectDirect(11, 24, 7, 3, 3, true);
+        placeObjectDirect(15, 35, 7, 3, 3, true);
+        placeObjectDirect(3, 19, 7, 3, 3, true);
+        placeObjectDirect(10, 40, 7, 3, 3, true);
+
+        placeObjectDirect(7, 28, 49, 5, 5, true);
+        placeObjectDirect(16, 21, 49, 5, 3, true);
+        placeObjectDirect(18, 36, 49, 3, 3, true);
+        placeObjectDirect(37, 39, 49, 2, 2, true);
+
+        // Core uniques
+        placeObjectDirect(4, 8, 24, 3, 3, true);
+        placeObjectDirect(5, 8, 29, 3, 3, true);
+        placeObjectDirect(6, 8, 34, 3, 3, true);
+        placeObjectDirect(28, 50, 24, 3, 3, true);
+        placeObjectDirect(25, 50, 29, 3, 3, true);
+        placeObjectDirect(29, 50, 34, 3, 3, true);
+
+        fillRemainingCellsGuaranteed('nord');
+      } else if (presetType === 'imperial_star') {
+        state.projectName = "Имперская Звезда";
+        fillFrameRect(48, 25, 25, 36, 36, true);
+        placeObjectDirect(1, 28, 28, 5, 5, true);
+        fillRemainingCellsGuaranteed('star');
+      } else if (presetType === 'venetian_gardens') {
+        state.projectName = "Венецианские Сады";
+        fillFrameRect(48, 24, 24, 37, 37, true);
+        placeObjectDirect(1, 28, 28, 5, 5, true);
+        fillRemainingCellsGuaranteed('venetian');
+      }
+
+      detectReserveBlocks();
+      refreshAllUI();
+      requestRender();
+    }
+
+const DEFAULT_PRESETS = [
+      { id: 'nord_harbor', label: '1. Северная Гавань V10 (Осевая Классика • 100%)' },
+      { id: 'imperial_star', label: '2. Имперская Звезда (Каналы и Квадранты • 100%)' },
+      { id: 'venetian_gardens', label: '3. Венецианские Сады (Курортный Парк • 100%)' },
+      { id: 'empty_island', label: '4. Чистый остров (Пустая сетка 60×60 с нуля)' }
+    ];
+
+    function syncPresetSelectDropdown(selectValue = null) {
+      const selectEl = document.getElementById('presetSelect');
+      if (!selectEl) return;
+      const currentVal = selectValue || selectEl.value || 'nord_harbor';
+
+      const hiddenDefaults = JSON.parse(localStorage.getItem('island_hidden_defaults') || '[]');
+      const customSlots = JSON.parse(localStorage.getItem('island_slots') || '[]');
+
+      let html = '';
+
+      // Стандартные шаблоны (которые не были удалены пользователем)
+      const visibleDefaults = DEFAULT_PRESETS.filter(p => !hiddenDefaults.includes(p.id));
+      if (visibleDefaults.length > 0) {
+        html += `<optgroup label="Базовые шаблоны" class="bg-slate-900 text-slate-400">`;
+        visibleDefaults.forEach(p => {
+          html += `<option value="${p.id}" class="bg-slate-900 text-white">${p.label}</option>`;
+        });
+        html += `</optgroup>`;
+      }
+
+      // Пользовательские сохранённые проекты
+      if (customSlots.length > 0) {
+        html += `<optgroup label="Сохранённые проекты" class="bg-slate-900 text-sky-400">`;
+        customSlots.forEach((slot, idx) => {
+          html += `<option value="custom_${idx}" class="bg-slate-900 text-amber-300 font-semibold">★ ${slot.name} (${slot.date})</option>`;
+        });
+        html += `</optgroup>`;
+      }
+
+      selectEl.innerHTML = html;
+
+      if ([...selectEl.options].some(o => o.value === currentVal)) {
+        selectEl.value = currentVal;
+      } else if (selectEl.options.length > 0) {
+        selectEl.selectedIndex = 0;
+      }
+      updatePresetDeleteBtn();
+    }
+
+    function updatePresetDeleteBtn() {
+      const selectEl = document.getElementById('presetSelect');
+      const delBtn = document.getElementById('deletePresetBtn');
+      const saveBtn = document.getElementById('saveToPresetBtn');
+      const isEmpty = !selectEl || selectEl.options.length === 0;
+      if (delBtn) {
+        delBtn.disabled = isEmpty;
+        delBtn.style.opacity = isEmpty ? '0.3' : '1';
+      }
+      if (saveBtn) {
+        saveBtn.disabled = isEmpty;
+        saveBtn.style.opacity = isEmpty ? '0.3' : '1';
+      }
+    }
+
+    function saveCurrentToSelectedPreset() {
+      const selectEl = document.getElementById('presetSelect');
+      const sel = selectEl ? selectEl.value : null;
+      if (!sel) return;
+
+      let slots = JSON.parse(localStorage.getItem('island_slots') || '[]');
+
+      if (sel.startsWith('custom_')) {
+        const index = parseInt(sel.replace('custom_', ''), 10);
+        if (slots[index]) {
+          state.projectName = slots[index].name;
+          slots[index].date = new Date().toLocaleString();
+          slots[index].snapshot = cloneSnapshot();
+          localStorage.setItem('island_slots', JSON.stringify(slots));
+          syncPresetSelectDropdown(`custom_${index}`);
+          renderSavedSlotsList();
+          showToast(`Изменения сохранены в проект «${slots[index].name}»!`);
+        }
+      } else {
+        const defPreset = DEFAULT_PRESETS.find(p => p.id === sel);
+        const cleanName = defPreset ? defPreset.label.replace(/^\d+\.\s*/, '') : (state.projectName || "Мой проект");
+        state.projectName = cleanName;
+
+        const saveData = {
+          name: cleanName,
+          date: new Date().toLocaleString(),
+          snapshot: cloneSnapshot()
+        };
+
+        const existingIdx = slots.findIndex(s => s.name.toLowerCase() === cleanName.toLowerCase());
+        let targetIdx = 0;
+        if (existingIdx !== -1) {
+          slots[existingIdx] = saveData;
+          targetIdx = existingIdx;
+        } else {
+          slots.unshift(saveData);
+          targetIdx = 0;
+        }
+
+        localStorage.setItem('island_slots', JSON.stringify(slots));
+        syncPresetSelectDropdown(`custom_${targetIdx}`);
+        renderSavedSlotsList();
+        showToast(`Шаблон сохранён как ваш проект «${cleanName}»!`);
+      }
+    }
+
+    function applySelectedPreset() {
+      const sel = document.getElementById('presetSelect').value;
+      if (!sel) return;
+      pushHistory();
+
+      if (sel.startsWith('custom_')) {
+        const index = parseInt(sel.replace('custom_', ''), 10);
+        const slots = JSON.parse(localStorage.getItem('island_slots') || '[]');
+        if (slots[index]) {
+          restoreSnapshot(slots[index].snapshot);
+          showToast(`Загружен ваш проект: «${slots[index].name}»`);
+        }
+      } else {
+        placeAllUniqueBuildingsMasterplan(sel);
+        showToast(`Загружен проект: «${state.projectName}»`);
+      }
+    }
+
+    function deleteSelectedPreset() {
+      const selectEl = document.getElementById('presetSelect');
+      const sel = selectEl.value;
+      if (!sel) return;
+
+      if (sel.startsWith('custom_')) {
+        const index = parseInt(sel.replace('custom_', ''), 10);
+        let slots = JSON.parse(localStorage.getItem('island_slots') || '[]');
+        const removedName = slots[index] ? slots[index].name : 'Проект';
+        slots.splice(index, 1);
+        localStorage.setItem('island_slots', JSON.stringify(slots));
+        syncPresetSelectDropdown();
+        renderSavedSlotsList();
+        showToast(`Проект «${removedName}» удалён из списка`);
+      } else {
+        const hiddenDefaults = JSON.parse(localStorage.getItem('island_hidden_defaults') || '[]');
+        if (!hiddenDefaults.includes(sel)) {
+          hiddenDefaults.push(sel);
+          localStorage.setItem('island_hidden_defaults', JSON.stringify(hiddenDefaults));
+        }
+        syncPresetSelectDropdown();
+        showToast("Шаблон убран из списка проектов");
+      }
+    }
+
+// =========================================================================
+    // DRAWING & RENDERING ENGINE
+    // =========================================================================
+    const canvas = document.getElementById('islandCanvas');
+    const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const container = document.getElementById('canvasContainer');
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  canvas.width = w;
+  canvas.height = h;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  requestRender();
+}
+    window.addEventListener('resize', resizeCanvas);
+
+    function requestRender() {
+      requestAnimationFrame(renderScene);
+    }
+
+    function renderScene() {
+      ctx.fillStyle = '#060a12';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.translate(canvas.width / 2 + camera.x, canvas.height / 2 + camera.y);
+      ctx.scale(camera.zoom, camera.zoom);
+
+      const showGrid = document.getElementById('showGridCheck').checked;
+      const showAxes = document.getElementById('showAxesCheck').checked;
+      const showLabels = document.getElementById('showLabelsCheck').checked;
+      const showReserves = document.getElementById('showReservesCheck').checked;
+
+if (state.viewMode === 'iso') {
+        renderIsoIsland(showGrid, showAxes, showLabels, showReserves);
+      } else {
+        render2dIsland(showGrid, showAxes, showLabels, showReserves);
+      }
+
+      ctx.restore();
+    }
+
+    function gridToScreenIso(gx, gy) {
+      const sx = (gx - gy) * ISO_DX;
+      const sy = (gx + gy) * ISO_DY;
+      return { x: sx, y: sy };
+    }
+
+    const CELL_2D = 22;
+
+    function renderIsoIsland(showGrid, showAxes, showLabels, showReserves) {
+      ctx.fillStyle = '#0f172a';
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      const p1 = gridToScreenIso(1, 1);
+      const p2 = gridToScreenIso(GRID_SIZE + 1, 1);
+      const p3 = gridToScreenIso(GRID_SIZE + 1, GRID_SIZE + 1);
+      const p4 = gridToScreenIso(1, GRID_SIZE + 1);
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.lineTo(p3.x, p3.y);
+      ctx.lineTo(p4.x, p4.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      if (showGrid) {
+        ctx.strokeStyle = 'rgba(51, 65, 85, 0.25)';
+        ctx.lineWidth = 1;
+        for (let i = 1; i <= GRID_SIZE + 1; i++) {
+          const a = gridToScreenIso(i, 1);
+          const b = gridToScreenIso(i, GRID_SIZE + 1);
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+
+          const c = gridToScreenIso(1, i);
+          const d = gridToScreenIso(GRID_SIZE + 1, i);
+          ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(d.x, d.y); ctx.stroke();
+        }
+      }
+
+      if (showAxes) {
+        ctx.strokeStyle = 'rgba(14, 165, 233, 0.5)';
+        ctx.lineWidth = 2;
+        const ax1 = gridToScreenIso(31, 1), ax2 = gridToScreenIso(31, GRID_SIZE + 1);
+        ctx.beginPath(); ctx.moveTo(ax1.x, ax1.y); ctx.lineTo(ax2.x, ax2.y); ctx.stroke();
+        const ay1 = gridToScreenIso(1, 31), ay2 = gridToScreenIso(GRID_SIZE + 1, 31);
+        ctx.beginPath(); ctx.moveTo(ay1.x, ay1.y); ctx.lineTo(ay2.x, ay2.y); ctx.stroke();
+      }
+
+      const renderQueue = [];
+
+      for (const p of state.placements.values()) {
+        const item = ITEM_BY_ID[p.itemId];
+        if (!item) continue;
+        if (item.connectable && item.folderName) continue;
+        renderQueue.push({
+          kind: 'building',
+          p,
+          item,
+          depth: (p.x + p.w / 2) + (p.y + p.h / 2)
+        });
+      }
+
+      const connGroups = buildConnectableGroups();
+      for (const g of connGroups) {
+        renderQueue.push({
+          kind: 'connectable',
+          g,
+          depth: (g.minX + g.w / 2) + (g.minY + g.h / 2)
+        });
+      }
+
+      renderQueue.sort((a, b) => a.depth - b.depth);
+
+      for (const entry of renderQueue) {
+        if (entry.kind === 'building') {
+          const { p, item } = entry;
+          const topPos = gridToScreenIso(p.x, p.y);
+          const bottomPos = gridToScreenIso(p.x + p.w, p.y + p.h);
+          const leftPos = gridToScreenIso(p.x, p.y + p.h);
+          const rightPos = gridToScreenIso(p.x + p.w, p.y);
+
+          const textureImg = item.imgBuilding ? imageCache[item.imgBuilding] : null;
+
+          if (textureImg && textureImg.complete && textureImg.naturalWidth > 0) {
+            const isoWidth = Math.abs(rightPos.x - leftPos.x);
+            const drawW = isoWidth;
+            const drawH = textureImg.naturalHeight * (drawW / textureImg.naturalWidth);
+            const centerX = (topPos.x + bottomPos.x) / 2;
+            const drawX = centerX - drawW / 2;
+            const drawY = bottomPos.y - drawH;
+            ctx.drawImage(textureImg, drawX, drawY, drawW, drawH);
+          } else {
+            ctx.fillStyle = item.color || '#38bdf8';
+            ctx.beginPath();
+            ctx.moveTo(topPos.x, topPos.y);
+            ctx.lineTo(rightPos.x, rightPos.y);
+            ctx.lineTo(bottomPos.x, bottomPos.y);
+            ctx.lineTo(leftPos.x, leftPos.y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.stroke();
+          }
+
+          if (showLabels && p.w >= 2 && p.h >= 2) {
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '10px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = '#000000';
+            ctx.shadowBlur = 4;
+            ctx.fillText(item.name, (topPos.x + bottomPos.x) / 2, (topPos.y + bottomPos.y) / 2);
+            ctx.shadowBlur = 0;
+          }
+        } else {
+          const g = entry.g;
+          const item = ITEM_BY_ID[g.itemId];
+          let textureImg = null;
+
+          const folderClean = g.type.replace(/\s+/g, '-');
+
+if (g.variant === 'single') {
+            textureImg = imageCache[item.imgBuilding];
+          } else {
+            const nameNoSpaces = g.type.replace(/\s+/g, '');
+            const nameHyphen = g.type.replace(/\s+/g, '-');
+            
+            textureImg = imageCache[`Постройки/Соединения/${g.type}_${g.variant}.png`] ||
+                         imageCache[`Постройки/Соединения/${nameNoSpaces}_${g.variant}.png`] ||
+                         imageCache[`Постройки/Соединения/${nameHyphen}_${g.variant}.png`];
+          }
+
+          const topLeft = gridToScreenIso(g.minX, g.minY);
+          const bottomRight = gridToScreenIso(g.minX + g.w, g.minY + g.h);
+          const topRight = gridToScreenIso(g.minX + g.w, g.minY);
+          const bottomLeft = gridToScreenIso(g.minX, g.minY + g.h);
+
+          if (textureImg && textureImg.complete && textureImg.naturalWidth > 0) {
+            const isoW = Math.abs(topRight.x - bottomLeft.x);
+            const drawW = isoW;
+            const drawH = textureImg.naturalHeight * (drawW / textureImg.naturalWidth);
+            const centerX = (topLeft.x + bottomRight.x) / 2;
+            const drawX = centerX - drawW / 2;
+            const drawY = bottomRight.y - drawH;
+            ctx.drawImage(textureImg, drawX, drawY, drawW, drawH);
+          } else {
+            ctx.fillStyle = item ? item.color : 'rgba(56,189,248,0.5)';
+            ctx.beginPath();
+            ctx.moveTo(topLeft.x, topLeft.y);
+            ctx.lineTo(topRight.x, topRight.y);
+            ctx.lineTo(bottomRight.x, bottomRight.y);
+            ctx.lineTo(bottomLeft.x, bottomLeft.y);
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
+      }
+
+      if (showReserves) {
+        ctx.strokeStyle = '#f43f5e';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        for (const r of state.reserves) {
+          const rpTop = gridToScreenIso(r.x, r.y);
+          const rpRight = gridToScreenIso(r.x + r.w, r.y);
+          const rpBottom = gridToScreenIso(r.x + r.w, r.y + r.h);
+          const rpLeft = gridToScreenIso(r.x, r.y + r.h);
+
+          ctx.beginPath();
+          ctx.moveTo(rpTop.x, rpTop.y);
+          ctx.lineTo(rpRight.x, rpRight.y);
+          ctx.lineTo(rpBottom.x, rpBottom.y);
+          ctx.lineTo(rpLeft.x, rpLeft.y);
+          ctx.closePath();
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+      }
+
+      if (pointer.gridX !== null && pointer.gridY !== null && state.tool !== 'pan') {
+        let previewItem = ITEM_BY_ID[state.selectedItemId];
+        let gx = pointer.gridX;
+        let gy = pointer.gridY;
+        let gw = previewItem ? previewItem.w : 1;
+        let gh = previewItem ? previewItem.h : 1;
+
+        if (pointer.movingPlacement) {
+          previewItem = ITEM_BY_ID[pointer.movingPlacement.itemId];
+          gx = pointer.gridX - pointer.movingPlacement.offsetX;
+          gy = pointer.gridY - pointer.movingPlacement.offsetY;
+          gw = pointer.movingPlacement.w;
+          gh = pointer.movingPlacement.h;
+        }
+
+        if (previewItem && state.tool !== 'area_move') {
+          ctx.strokeStyle = state.tool === 'delete_type' ? 'rgba(244, 63, 94, 0.95)' : 'rgba(56, 189, 248, 0.95)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          const topPos = gridToScreenIso(gx, gy);
+          const rightPos = gridToScreenIso(gx + gw, gy);
+          const bottomPos = gridToScreenIso(gx + gw, gy + gh);
+          const leftPos = gridToScreenIso(gx, gy + gh);
+
+          ctx.moveTo(topPos.x, topPos.y);
+          ctx.lineTo(rightPos.x, rightPos.y);
+          ctx.lineTo(bottomPos.x, bottomPos.y);
+          ctx.lineTo(leftPos.x, leftPos.y);
+          ctx.closePath();
+          ctx.fillStyle = state.tool === 'delete_type' ? 'rgba(244, 63, 94, 0.25)' : 'rgba(56, 189, 248, 0.25)';
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        // Отрисовка призрака перетаскиваемой замкнутой области за курсором
+        if (state.tool === 'area_move' && pointer.areaDragging && pointer.gridX !== null) {
+          const offsetX = pointer.gridX - pointer.areaDragging.anchorX;
+          const offsetY = pointer.gridY - pointer.areaDragging.anchorY;
+
+          for (const item of pointer.areaDragging.items) {
+            const nx = item.x + offsetX;
+            const ny = item.y + offsetY;
+            const gTop = gridToScreenIso(nx, ny);
+            const gRight = gridToScreenIso(nx + item.w, ny);
+            const gBottom = gridToScreenIso(nx + item.w, ny + item.h);
+            const gLeft = gridToScreenIso(nx, ny + item.h);
+
+            const itDef = ITEM_BY_ID[item.itemId];
+            ctx.strokeStyle = 'rgba(168, 85, 247, 0.95)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(gTop.x, gTop.y);
+            ctx.lineTo(gRight.x, gRight.y);
+            ctx.lineTo(gBottom.x, gBottom.y);
+            ctx.lineTo(gLeft.x, gLeft.y);
+            ctx.closePath();
+            ctx.fillStyle = itDef ? (itDef.color || 'rgba(168, 85, 247, 0.3)') : 'rgba(168, 85, 247, 0.3)';
+            ctx.fill();
+            ctx.stroke();
+          }
+        }
+
+        // Всплывающий индикатор координат над курсором
+        const cursorScreen = gridToScreenIso(pointer.gridX, pointer.gridY);
+        ctx.save();
+        ctx.font = 'bold 11px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        const coordText = `X: ${pointer.gridX}, Y: ${pointer.gridY}`;
+        
+        const textWidth = ctx.measureText(coordText).width;
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+        ctx.lineWidth = 1;
+        ctx.fillRect(cursorScreen.x - textWidth / 2 - 6, cursorScreen.y - 36, textWidth + 12, 20);
+        ctx.strokeRect(cursorScreen.x - textWidth / 2 - 6, cursorScreen.y - 36, textWidth + 12, 20);
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText(coordText, cursorScreen.x, cursorScreen.y - 22);
+        ctx.restore();
+      }
+    }
+    
+
+    function render2dIsland(showGrid, showAxes, showLabels, showReserves) {
+      const cellSize = CELL_2D;
+      const originX = -(GRID_SIZE * cellSize) / 2;
+      const originY = -(GRID_SIZE * cellSize) / 2;
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(originX, originY, GRID_SIZE * cellSize, GRID_SIZE * cellSize);
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(originX, originY, GRID_SIZE * cellSize, GRID_SIZE * cellSize);
+
+      if (showGrid) {
+        ctx.strokeStyle = 'rgba(51, 65, 85, 0.3)';
+        ctx.lineWidth = 0.5;
+        for (let i = 0; i <= GRID_SIZE; i++) {
+          ctx.beginPath(); ctx.moveTo(originX + i * cellSize, originY); ctx.lineTo(originX + i * cellSize, originY + GRID_SIZE * cellSize); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(originX, originY + i * cellSize); ctx.lineTo(originX + GRID_SIZE * cellSize, originY + i * cellSize); ctx.stroke();
+        }
+      }
+
+      for (const p of state.placements.values()) {
+        const item = ITEM_BY_ID[p.itemId];
+        if (!item) continue;
+        const rx = originX + (p.x - 1) * cellSize;
+        const ry = originY + (p.y - 1) * cellSize;
+        ctx.fillStyle = item.color || '#38bdf8';
+        ctx.fillRect(rx + 1, ry + 1, p.w * cellSize - 2, p.h * cellSize - 2);
+      }
+    }
+
+// === СТАБИЛЬНАЯ ГРУППИРОВКА: 1. КУБ 2x2 -> 2. УГОЛКИ -> 3. SINGLE 1x1 ===
+    function buildConnectableGroups() {
+      const groups = [];
+      const consumed = new Set();
+
+      const byItem = {};
+      for (const [uid, p] of state.placements) {
+        const item = ITEM_BY_ID[p.itemId];
+        if (!item || !item.connectable || !item.folderName) continue;
+        if (p.w !== 1 || p.h !== 1) continue;
+        if (!byItem[p.itemId]) byItem[p.itemId] = [];
+        byItem[p.itemId].push({ x: p.x, y: p.y, uid, itemId: p.itemId });
+      }
+
+      for (const [itemIdStr, cells] of Object.entries(byItem)) {
+        const itemId = Number(itemIdStr);
+        const item = ITEM_BY_ID[itemId];
+        cells.sort((a, b) => (a.y - b.y) || (a.x - b.x));
+        const cellSet = new Set(cells.map(c => `${c.x},${c.y}`));
+
+        // ПАС 1: Квадраты 2×2 (_block)
+        for (const c of cells) {
+          const offsets = [[0, 0], [-1, 0], [0, -1], [-1, -1]];
+          for (const [ox, oy] of offsets) {
+            const bx = c.x + ox;
+            const by = c.y + oy;
+            const blockKeys = [`${bx},${by}`, `${bx+1},${by}`, `${bx},${by+1}`, `${bx+1},${by+1}`];
+
+            if (blockKeys.every(k => cellSet.has(k) && !consumed.has(k))) {
+              blockKeys.forEach(k => consumed.add(k));
+              groups.push({ itemId, type: item.folderName, variant: 'block', minX: bx, minY: by, w: 2, h: 2 });
+              break;
+            }
+          }
+        }
+
+        // ПАС 2: Уголки из 3 клеток (enw, esw, nes, nws)
+        for (const c of cells) {
+          if (consumed.has(`${c.x},${c.y}`)) continue;
+          const offsets = [[0, 0], [-1, 0], [0, -1], [-1, -1]];
+          for (const [ox, oy] of offsets) {
+            const bx = c.x + ox;
+            const by = c.y + oy;
+            const corners = [
+              { dir: 'N', x: bx,     y: by,     k: `${bx},${by}` },
+              { dir: 'E', x: bx + 1, y: by,     k: `${bx + 1},${by}` },
+              { dir: 'W', x: bx,     y: by + 1, k: `${bx},${by + 1}` },
+              { dir: 'S', x: bx + 1, y: by + 1, k: `${bx + 1},${by + 1}` }
+            ];
+
+            const present = corners.filter(pt => cellSet.has(pt.k) && !consumed.has(pt.k));
+            if (present.length === 3) {
+              const missing = corners.find(pt => !present.includes(pt));
+              let variant = 'enw';
+              if (missing.dir === 'S') variant = 'enw';
+              else if (missing.dir === 'N') variant = 'esw';
+              else if (missing.dir === 'W') variant = 'nes';
+              else if (missing.dir === 'E') variant = 'nws';
+
+              present.forEach(pt => consumed.add(pt.k));
+              groups.push({ itemId, type: item.folderName, variant, minX: bx, minY: by, w: 2, h: 2 });
+              break;
+            }
+          }
+        }
+
+        // ПАС 3: Все остальные клетки рендерятся как _single.png
+        for (const c of cells) {
+          const key = `${c.x},${c.y}`;
+          if (consumed.has(key)) continue;
+          consumed.add(key);
+          groups.push({ itemId, type: item.folderName, variant: 'single', minX: c.x, minY: c.y, w: 1, h: 1 });
+        }
+      }
+
+      return groups;
+    }
+  // MOUSE & CAMERA INTERACTION
+    function screenToGrid(screenX, screenY) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = screenX - rect.left;
+      const clientY = screenY - rect.top;
+      const cx = clientX - canvas.width / 2 - camera.x;
+      const cy = clientY - canvas.height / 2 - camera.y;
+      const scaledX = cx / camera.zoom;
+      const scaledY = cy / camera.zoom;
+
+      if (state.viewMode === 'iso') {
+        const gx = scaledX / (2 * ISO_DX) + scaledY / (2 * ISO_DY);
+        const gy = scaledY / (2 * ISO_DY) - scaledX / (2 * ISO_DX);
+        return { x: Math.floor(gx), y: Math.floor(gy) };
+      } else {
+        const cellSize = CELL_2D;
+        const originX = -(GRID_SIZE * cellSize) / 2;
+        const originY = -(GRID_SIZE * cellSize) / 2;
+        const gx = Math.floor((scaledX - originX) / cellSize) + 1;
+        const gy = Math.floor((scaledY - originY) / cellSize) + 1;
+        return { x: gx, y: gy };
+      }
+    }
+
+    // Проверка: свободны ли клетки под постройкой (x, y, w, h)
+    function isAreaFree(x, y, w, h, ignoreUid = 0) {
+      if (!isInsideGrid(x, y, w, h)) return false;
+      for (let cy = y; cy < y + h; cy++) {
+        for (let cx = x; cx < x + w; cx++) {
+          const uid = state.grid[cy][cx];
+          if (uid !== 0 && uid !== ignoreUid) return false;
+        }
+      }
+      return true;
+    }
+
+    canvas.addEventListener('mousemove', e => {
+      const g = screenToGrid(e.clientX, e.clientY);
+      const prevGridX = pointer.gridX;
+      const prevGridY = pointer.gridY;
+
+      if (isInsideGrid(g.x, g.y)) {
+        pointer.gridX = g.x;
+        pointer.gridY = g.y;
+        document.getElementById('hudCoords').textContent = `X: ${g.x}, Y: ${g.y}`;
+        const uid = state.grid[g.y][g.x];
+        if (uid !== 0) {
+          const p = state.placements.get(uid);
+          const item = ITEM_BY_ID[p.itemId];
+          document.getElementById('hudCellInfo').textContent = `${item.name} (${item.w}×${item.h}) — Зажмите ЛКМ, чтобы перетащить`;
+        } else {
+          document.getElementById('hudCellInfo').textContent = 'Пустая клетка';
+        }
+      } else {
+        pointer.gridX = null;
+        pointer.gridY = null;
+        document.getElementById('hudCoords').textContent = 'X: --, Y: --';
+      }
+
+      // Перемещение камеры (правая кнопка мыши или инструмент «Рука»)
+      if (pointer.isPanning) {
+        camera.x = pointer.camStartX + (e.clientX - pointer.panStartX);
+        camera.y = pointer.camStartY + (e.clientY - pointer.panStartY);
+        requestRender();
+        return;
+      }
+
+      if (pointer.gridX === prevGridX && pointer.gridY === prevGridY) {
+        return;
+      }
+
+      // 1. Если мы перетаскиваем постройку или захваченную область — ничего не ставим, ждём отпускания ЛКМ!
+      if (pointer.isDown && (pointer.movingPlacement || pointer.placingNewBuilding || pointer.areaDragging)) {
+        requestRender();
+        return;
+      }
+
+      // 2. В режиме «Строить» при зажатой ЛКМ рисуем протягиванием ТОЛЬКО дорожки/лес 1x1 по пустым клеткам
+      if (pointer.isDown && state.tool === 'brush' && pointer.gridX !== null) {
+        const item = ITEM_BY_ID[state.selectedItemId];
+        if (item && item.w === 1 && item.h === 1) {
+          const targets = getSymmetryTargets(pointer.gridX, pointer.gridY, 1, 1, state.symmetry);
+          let placedAny = false;
+          for (const t of targets) {
+            const res = placeObjectDirect(item.id, t.x, t.y, 1, 1, false);
+            if (res.ok && !res.skipped) placedAny = true;
+          }
+          if (placedAny) {
+            detectReserveBlocks();
+            refreshAllUI();
+          }
+        }
+        requestRender();
+        return;
+      }
+
+      // 3. В режиме «Ластик» при зажатой ЛКМ стираем объекты под курсором
+      if (pointer.isDown && state.tool === 'erase' && pointer.gridX !== null) {
+        const uid = state.grid[pointer.gridY][pointer.gridX];
+        if (uid !== 0) {
+          removeUid(uid);
+          detectReserveBlocks();
+          refreshAllUI();
+        }
+        requestRender();
+        return;
+      }
+
+      requestRender();
+    });
+
+    canvas.addEventListener('mousedown', e => {
+      pointer.isDown = true;
+      pointer.button = e.button;
+
+      if (e.button === 2 || state.tool === 'pan') {
+        pointer.isPanning = true;
+        pointer.panStartX = e.clientX;
+        pointer.panStartY = e.clientY;
+        pointer.camStartX = camera.x;
+        pointer.camStartY = camera.y;
+        return;
+      }
+
+      if (e.button === 0 && pointer.gridX !== null && pointer.gridY !== null) {
+        const clickedUid = state.grid[pointer.gridY][pointer.gridX];
+        const clickedPlacement = clickedUid !== 0 ? state.placements.get(clickedUid) : null;
+        const clickedItem = clickedPlacement ? ITEM_BY_ID[clickedPlacement.itemId] : null;
+
+        // 1. Явный инструмент «Двигать» ИЛИ клик в режиме «Строить» по уже установленному зданию/декору:
+        // Сразу подхватываем существующую постройку для перетаскивания!
+        if (
+          state.tool === 'move' ||
+          (state.tool === 'brush' && clickedPlacement && (clickedItem.w >= 2 || clickedItem.h >= 2 || clickedItem.type === 'Декор' || clickedItem.type === 'Магазин'))
+        ) {
+          if (clickedPlacement) {
+            pushHistory();
+            pointer.movingPlacement = {
+              itemId: clickedPlacement.itemId,
+              origX: clickedPlacement.x,
+              origY: clickedPlacement.y,
+              w: clickedPlacement.w,
+              h: clickedPlacement.h,
+              offsetX: pointer.gridX - clickedPlacement.x,
+              offsetY: pointer.gridY - clickedPlacement.y
+            };
+            removeUid(clickedUid);
+            selectItem(clickedPlacement.itemId);
+            refreshAllUI();
+            requestRender();
+            showToast(`Перетащите «${clickedItem.name}» на новое место и отпустите ЛКМ`);
+          } else if (state.tool === 'move') {
+            showToast("Кликните на постройку, чтобы перетащить её");
+          }
+          return;
+        }
+
+        // 2. Инструмент «Строить» (brush) на свободной территории (или поверх травы/дорог):
+        if (state.tool === 'brush') {
+          const item = ITEM_BY_ID[state.selectedItemId];
+          if (!item) return;
+
+          // Если это здание 2x2 и больше — НЕ ставим его сразу в момент нажатия,
+          // а включаем режим примерочного перетаскивания до отпускания кнопки мыши!
+          if (item.w >= 2 || item.h >= 2) {
+            pointer.placingNewBuilding = {
+              itemId: item.id,
+              w: item.w,
+              h: item.h
+            };
+            requestRender();
+            return;
+          }
+
+          // Если это тайл 1x1 (дорога, вода, дерево, мелкий декор) — ставим сразу и разрешаем тянуть линию
+          const overwrite = document.getElementById('overwriteToggle').checked;
+          if (!overwrite && !isAreaFree(pointer.gridX, pointer.gridY, 1, 1)) {
+            showToast("Клетка занята!");
+            return;
+          }
+          pushHistory();
+          placeWithSymmetry(state.selectedItemId, pointer.gridX, pointer.gridY, 1, 1);
+          detectReserveBlocks();
+          refreshAllUI();
+          requestRender();
+          return;
+        }
+
+        // 3. Инструмент «Ластик» (erase)
+        if (state.tool === 'erase') {
+          if (clickedUid !== 0) {
+            pushHistory();
+            removeUid(clickedUid);
+            detectReserveBlocks();
+            refreshAllUI();
+            requestRender();
+          }
+          return;
+        }
+
+// 4. Инструмент «Удаление всех построек выбранного типа» (delete_type)
+        if (state.tool === 'delete_type') {
+          if (clickedPlacement) {
+            const targetItemId = clickedPlacement.itemId;
+            const targetName = clickedItem ? clickedItem.name : 'объектов';
+            pushHistory();
+
+            let removedCount = 0;
+            for (const [uid, p] of [...state.placements.entries()]) {
+              if (p.itemId === targetItemId) {
+                removeUid(uid);
+                removedCount++;
+              }
+            }
+
+            detectReserveBlocks();
+            refreshAllUI();
+            requestRender();
+            showToast(`Удалены все «${targetName}»: ${removedCount} шт.`);
+          } else {
+            showToast("Кликните ЛКМ на постройку, тип которой нужно удалить со всей карты");
+          }
+          return;
+        }
+
+        // 5. Инструменты «Зона», «Рамка», «Линия»
+        if (state.tool === 'rect' || state.tool === 'frame' || state.tool === 'line') {
+          pushHistory();
+          pointer.dragStartGrid = { x: pointer.gridX, y: pointer.gridY };
+        }
+
+        // 5.1 Инструмент «Перемещение замкнутой области» (area_move)
+        if (state.tool === 'area_move') {
+          if (!pointer.areaDragging && clickedUid !== 0) {
+            pushHistory();
+            
+            // Находим все соединенные/близкие объекты методом поиска в ширину (по аналогии с заливкой)
+            const visitedCells = Array.from({ length: GRID_SIZE + 1 }, () => new Uint8Array(GRID_SIZE + 1));
+            const connectedUids = new Set();
+            const queue = [{ x: pointer.gridX, y: pointer.gridY }];
+            
+            // Отметим стартовый объект
+            connectedUids.add(clickedUid);
+            
+            // Заполним сетку посещенных клеток для всех элементов этого объекта
+            const startPlat = state.placements.get(clickedUid);
+            let minX = startPlat.x, maxX = startPlat.x + startPlat.w - 1;
+            let minY = startPlat.y, maxY = startPlat.y + startPlat.h - 1;
+
+            while (queue.length > 0) {
+              const { x, y } = queue.shift();
+              
+              // Проверяем соседей (вверх, вниз, влево, вправо), чтобы найти соприкасающиеся объекты
+              const neighbors = [
+                { x: x + 1, y }, { x: x - 1, y }, { x, y: y + 1 }, { x, y: y - 1 }
+              ];
+
+              for (const n of neighbors) {
+                if (isInsideGrid(n.x, n.y) && !visitedCells[n.y][n.x]) {
+                  visitedCells[n.y][n.x] = 1;
+                  const neighborUid = state.grid[n.y][n.x];
+                  if (neighborUid !== 0 && !connectedUids.has(neighborUid)) {
+                    connectedUids.add(neighborUid);
+                    queue.push({ x: n.x, y: n.y });
+                    
+                    const np = state.placements.get(neighborUid);
+                    if (np) {
+                      minX = Math.min(minX, np.x);
+                      maxX = Math.max(maxX, np.x + np.w - 1);
+                      minY = Math.min(minY, np.y);
+                      maxY = Math.max(maxY, np.y + np.h - 1);
+                    }
+                  }
+                }
+              }
+            }
+
+            // Также захватываем пустые промежутки/объекты внутри найденного габаритного прямоугольника зоны
+            const collected = [];
+            for (const uid of connectedUids) {
+              const p = state.placements.get(uid);
+              if (p) {
+                collected.push({ itemId: p.itemId, x: p.x, y: p.y, w: p.w, h: p.h });
+                removeUid(uid);
+              }
+            }
+
+            pointer.areaDragging = {
+              items: collected,
+              anchorX: pointer.gridX,
+              anchorY: pointer.gridY,
+              minX, minY, maxX, maxY
+            };
+            
+            showToast(`Захвачена область (${collected.length} объектов). Переместите и отпустите ЛКМ`);
+          }
+          requestRender();
+          return;
+        }
+
+        // 6. Инструмент «Заливка» (flood fill)
+        if (state.tool === 'fill') {
+          const startX = pointer.gridX;
+          const startY = pointer.gridY;
+          const item = ITEM_BY_ID[state.selectedItemId];
+
+          if (item && item.w === 1 && item.h === 1) {
+            // Проверяем, что стартовая клетка пуста
+            if (state.grid[startY][startX] === 0) {
+              pushHistory();
+              
+              // Алгоритм заливки области (Flood Fill через очередь)
+              const queue = [{ x: startX, y: startY }];
+              const visited = Array.from({ length: GRID_SIZE + 1 }, () => new Uint8Array(GRID_SIZE + 1));
+              visited[startY][startX] = 1;
+
+              let filledCount = 0;
+              // Ограничим максимальное число заливаемых клеток на всякий случай (например, до 1500 за раз)
+              while (queue.length > 0 && filledCount < 1500) {
+                const { x, y } = queue.shift();
+
+                // Ставим объект с учетом симметрии
+                placeWithSymmetry(item.id, x, y, 1, 1);
+                filledCount++;
+
+                // Проверяем 4 соседей (вверх, вниз, влево, вправо)
+                const neighbors = [
+                  { x: x + 1, y },
+                  { x: x - 1, y },
+                  { x, y: y + 1 },
+                  { x, y: y - 1 }
+                ];
+
+                for (const n of neighbors) {
+                  if (isInsideGrid(n.x, n.y) && !visited[n.y][n.x]) {
+                    visited[n.y][n.x] = 1;
+                    // Если соседняя клетка пустая — добавляем в очередь на закрашивание
+                    if (state.grid[n.y][n.x] === 0) {
+                      queue.push(n);
+                    }
+                  }
+                }
+              }
+
+              detectReserveBlocks();
+              refreshAllUI();
+              requestRender();
+              showToast(`Залито клеток: ${filledCount}`);
+            } else {
+              showToast("Клетка уже занята!");
+            }
+          } else {
+            showToast("Для заливки выберите объект размером 1×1 (дорогу или дерево)");
+          }
+          return;
+        }
+
+        // 7. Инструмент «Авто-лес замкнутой области» (forest_fill_area)
+        if (state.tool === 'forest_fill_area') {
+          const startX = pointer.gridX;
+          const startY = pointer.gridY;
+
+          if (state.grid[startY][startX] !== 0) {
+            showToast("Кликните на пустую клетку внутри нужной замкнутой области!");
+            return;
+          }
+
+          pushHistory();
+          const forestIds = [80, 81, 82, 83, 84, 78, 79];
+          const queue = [{ x: startX, y: startY }];
+          const visited = Array.from({ length: GRID_SIZE + 1 }, () => new Uint8Array(GRID_SIZE + 1));
+          visited[startY][startX] = 1;
+
+          let filledCount = 0;
+          while (queue.length > 0 && filledCount < 3600) {
+            const { x, y } = queue.shift();
+
+            // Подбираем случайное дерево из доступных по лимиту
+            const availableForest = forestIds.filter(fid => (state.counts[fid] || 0) < ITEM_BY_ID[fid].limit);
+            if (availableForest.length > 0) {
+              const randomForestId = availableForest[Math.floor(Math.random() * availableForest.length)];
+              const placed = placeWithSymmetry(randomForestId, x, y, 1, 1);
+              if (placed) filledCount++;
+            }
+
+            const neighbors = [
+              { x: x + 1, y },
+              { x: x - 1, y },
+              { x, y: y + 1 },
+              { x, y: y - 1 }
+            ];
+
+            for (const n of neighbors) {
+              if (isInsideGrid(n.x, n.y) && !visited[n.y][n.x]) {
+                visited[n.y][n.x] = 1;
+                if (state.grid[n.y][n.x] === 0) {
+                  queue.push(n);
+                }
+              }
+            }
+          }
+
+          detectReserveBlocks();
+          refreshAllUI();
+          requestRender();
+          showToast(`Замкнутая область заполнена лесом: ${filledCount} клеток`);
+          return;
+        }
+
+        // 8. Инструмент «Срубить лес замкнутой области» (forest_clear_area)
+        if (state.tool === 'forest_clear_area') {
+          const startX = pointer.gridX;
+          const startY = pointer.gridY;
+
+          // Проверяем, можно ли проходить через клетку (пустая клетка или дерево категории «Лес»)
+          const isForestOrEmpty = (cx, cy) => {
+            const u = state.grid[cy][cx];
+            if (u === 0) return true;
+            const pl = state.placements.get(u);
+            const it = pl ? ITEM_BY_ID[pl.itemId] : null;
+            return it && it.type === 'Лес';
+          };
+
+          if (!isForestOrEmpty(startX, startY)) {
+            showToast("Кликните на дерево или пустую клетку внутри замкнутой зоны!");
+            return;
+          }
+
+          pushHistory();
+          const queue = [{ x: startX, y: startY }];
+          const visited = Array.from({ length: GRID_SIZE + 1 }, () => new Uint8Array(GRID_SIZE + 1));
+          visited[startY][startX] = 1;
+          const uidsToRemove = new Set();
+
+          while (queue.length > 0) {
+            const { x, y } = queue.shift();
+            const u = state.grid[y][x];
+            if (u !== 0) {
+              const pl = state.placements.get(u);
+              const it = pl ? ITEM_BY_ID[pl.itemId] : null;
+              if (it && it.type === 'Лес') {
+                uidsToRemove.add(u);
+              }
+            }
+
+            const neighbors = [
+              { x: x + 1, y },
+              { x: x - 1, y },
+              { x, y: y + 1 },
+              { x, y: y - 1 }
+            ];
+
+            for (const n of neighbors) {
+              if (isInsideGrid(n.x, n.y) && !visited[n.y][n.x]) {
+                visited[n.y][n.x] = 1;
+                if (isForestOrEmpty(n.x, n.y)) {
+                  queue.push(n);
+                }
+              }
+            }
+          }
+
+          uidsToRemove.forEach(u => removeUid(u));
+          detectReserveBlocks();
+          refreshAllUI();
+          requestRender();
+          showToast(`Срублено деревьев в замкнутой области: ${uidsToRemove.size}`);
+          return;
+        }
+      }
+    });
+
+    window.addEventListener('mouseup', e => {
+      if (pointer.isPanning) {
+        pointer.isPanning = false;
+        pointer.isDown = false;
+        return;
+      }
+
+      // А. Завершение перетаскивания ОДИНОЧНОЙ СУЩЕСТВУЮЩЕЙ постройки (инструмент «Двигать»)
+      if (pointer.movingPlacement) {
+        const mp = pointer.movingPlacement;
+        const targetX = pointer.gridX !== null ? (pointer.gridX - mp.offsetX) : mp.origX;
+        const targetY = pointer.gridY !== null ? (pointer.gridY - mp.offsetY) : mp.origY;
+        const overwrite = document.getElementById('overwriteToggle').checked;
+
+        if (isInsideGrid(targetX, targetY, mp.w, mp.h) && (overwrite || isAreaFree(targetX, targetY, mp.w, mp.h))) {
+          placeObjectDirect(mp.itemId, targetX, targetY, mp.w, mp.h, overwrite);
+          showToast(`Установлено в X:${targetX}, Y:${targetY}`);
+        } else {
+          placeObjectDirect(mp.itemId, mp.origX, mp.origY, mp.w, mp.h, true);
+          showToast("Место занято! Постройка возвращена на прежнее место");
+        }
+
+        pointer.movingPlacement = null;
+        pointer.isDown = false;
+        detectReserveBlocks();
+        refreshAllUI();
+        requestRender();
+        return;
+      }
+
+      // А-2. Завершение перетаскивания ЗАМКНУТОЙ ОБЛАСТИ (инструмент «Перенос зоны»)
+      if (pointer.areaDragging) {
+        const ad = pointer.areaDragging;
+        const targetGridX = pointer.gridX !== null ? pointer.gridX : ad.anchorX;
+        const targetGridY = pointer.gridY !== null ? pointer.gridY : ad.anchorY;
+        const offsetX = targetGridX - ad.anchorX;
+        const offsetY = targetGridY - ad.anchorY;
+
+        let canPlace = true;
+        for (const item of ad.items) {
+          const nx = item.x + offsetX;
+          const ny = item.y + offsetY;
+          if (!isInsideGrid(nx, ny, item.w, item.h)) {
+            canPlace = false;
+            break;
+          }
+        }
+
+        if (canPlace) {
+          for (const item of ad.items) {
+            placeObjectDirect(item.itemId, item.x + offsetX, item.y + offsetY, item.w, item.h, true);
+          }
+          showToast("Область успешно перемещена!");
+        } else {
+          for (const item of ad.items) {
+            placeObjectDirect(item.itemId, item.x, item.y, item.w, item.h, true);
+          }
+          showToast("Ошибка: область выходит за границы острова. Возвращено назад.");
+        }
+
+        pointer.areaDragging = null;
+        pointer.isDown = false;
+        detectReserveBlocks();
+        refreshAllUI();
+        requestRender();
+        return;
+      }
+
+      // Б. Завершение установки НОВОГО крупного здания (ставится там, где отпустили ЛКМ)
+      if (pointer.placingNewBuilding) {
+        const nb = pointer.placingNewBuilding;
+        if (pointer.gridX !== null && pointer.gridY !== null) {
+          const overwrite = document.getElementById('overwriteToggle').checked;
+          if (!overwrite && !isAreaFree(pointer.gridX, pointer.gridY, nb.w, nb.h)) {
+            showToast("Клетки заняты! Выберите свободное место или включите «Поверх»");
+          } else {
+            pushHistory();
+            placeWithSymmetry(nb.itemId, pointer.gridX, pointer.gridY, nb.w, nb.h);
+            detectReserveBlocks();
+            refreshAllUI();
+          }
+        }
+        pointer.placingNewBuilding = null;
+        pointer.isDown = false;
+        requestRender();
+        return;
+      }
+
+      // В. Завершение растягивания «Зоны», «Рамки» или «Линии»
+      if (pointer.dragStartGrid && pointer.gridX !== null && pointer.gridY !== null) {
+        const s = pointer.dragStartGrid;
+        const ed = { x: pointer.gridX, y: pointer.gridY };
+        const item = ITEM_BY_ID[state.selectedItemId];
+        if (item) {
+          const minX = Math.min(s.x, ed.x), maxX = Math.max(s.x, ed.x);
+          const minY = Math.min(s.y, ed.y), maxY = Math.max(s.y, ed.y);
+
+          if (state.tool === 'rect') {
+            for (let y = minY; y <= maxY; y += item.h) {
+              for (let x = minX; x <= maxX; x += item.w) {
+                placeWithSymmetry(item.id, x, y, item.w, item.h);
+              }
+            }
+          } else if (state.tool === 'frame') {
+            for (let x = minX; x <= maxX; x++) {
+              placeWithSymmetry(item.id, x, minY, 1, 1);
+              placeWithSymmetry(item.id, x, maxY, 1, 1);
+            }
+            for (let y = minY + 1; y <= maxY - 1; y++) {
+              placeWithSymmetry(item.id, minX, y, 1, 1);
+              placeWithSymmetry(item.id, maxX, y, 1, 1);
+            }
+          } else if (state.tool === 'line') {
+            const dx = Math.abs(ed.x - s.x), dy = Math.abs(ed.y - s.y);
+            const sx = s.x < ed.x ? 1 : -1, sy = s.y < ed.y ? 1 : -1;
+            let err = dx - dy, cx = s.x, cy = s.y;
+            while (true) {
+              placeWithSymmetry(item.id, cx, cy, item.w, item.h);
+              if (cx === ed.x && cy === ed.y) break;
+              const e2 = 2 * err;
+              if (e2 > -dy) { err -= dy; cx += sx; }
+              if (e2 < dx) { err += dx; cy += sy; }
+            }
+          }
+          detectReserveBlocks();
+          refreshAllUI();
+          requestRender();
+        }
+      }
+      pointer.isDown = false;
+      pointer.dragStartGrid = null;
+    });
+
+    canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
+  const oldZoom = camera.zoom;
+  const newZoom = Math.max(0.15, Math.min(3.5, oldZoom * zoomFactor));
+
+  // Курсор относительно центра canvas
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left - canvas.width / 2;
+  const mouseY = e.clientY - rect.top - canvas.height / 2;
+
+  // Корректируем камеру: точка под курсором остаётся на месте
+  camera.x = mouseX - (mouseX - camera.x) * (newZoom / oldZoom);
+  camera.y = mouseY - (mouseY - camera.y) * (newZoom / oldZoom);
+  camera.zoom = newZoom;
+
+  document.getElementById('zoomLabel').textContent = `${Math.round(camera.zoom * 100)}%`;
+  requestRender();
+}, { passive: false });
+
+function setTool(t) {
+      state.tool = t;
+      document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+      const btn = document.getElementById(`tool-${t}`);
+      if (btn) btn.classList.add('active');
+      if (t === 'delete_type') {
+        showToast("Кликните ЛКМ на любую постройку, чтобы удалить все такие же");
+      } else if (t === 'area_move') {
+        showToast("Кликните на любой объект замкнутой группы и перетащите её");
+      } else if (t === 'forest_fill_area') {
+        showToast("Кликните ЛКМ на пустую клетку внутри замкнутого контура для посадки леса");
+      } else if (t === 'forest_clear_area') {
+        showToast("Кликните ЛКМ на дерево или внутрь зоны, чтобы срубить лес в замкнутой области");
+      }
+      pointer.areaSelection = null;
+      pointer.areaDragging = null;
+    }
+
+    function setSymmetry(s) {
+      state.symmetry = s;
+      document.querySelectorAll('.sym-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(`sym-${s}`).classList.add('active');
+      showToast(`Симметрия: ${s === 'none' ? 'Выкл' : s.toUpperCase()}`);
+    }
+
+    function selectItem(id) {
+      state.selectedItemId = id;
+      refreshActiveBanner();
+      document.querySelectorAll('.catalog-card').forEach(c => c.classList.remove('selected'));
+      const card = document.getElementById(`catalog-card-${id}`);
+      if (card) card.classList.add('selected');
+    }
+
+    function setCatalogFilter(f) {
+      state.catalogFilter = f;
+      document.querySelectorAll('.cat-pill').forEach(p => {
+        p.classList.toggle('bg-sky-600', p.dataset.filter === f);
+        p.classList.toggle('text-white', p.dataset.filter === f);
+        p.classList.toggle('bg-slate-800', p.dataset.filter !== f);
+      });
+      renderCatalogList();
+    }
+
+    function toggleOnlyAvailable() {
+      state.onlyAvailable = !state.onlyAvailable;
+      const btn = document.getElementById('onlyAvailableBtn');
+      if (btn) {
+        btn.classList.toggle('bg-emerald-600', state.onlyAvailable);
+        btn.classList.toggle('text-white', state.onlyAvailable);
+        btn.classList.toggle('border-emerald-400', state.onlyAvailable);
+        btn.classList.toggle('shadow-md', state.onlyAvailable);
+        btn.classList.toggle('bg-slate-800', !state.onlyAvailable);
+        btn.classList.toggle('text-emerald-400', !state.onlyAvailable);
+      }
+      renderCatalogList();
+    }
+
+    function clearCatalogSearch() {
+      document.getElementById('catalogSearch').value = '';
+      state.catalogSearch = '';
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+      renderCatalogList();
+    }
+
+    document.getElementById('catalogSearch').addEventListener('input', e => {
+      state.catalogSearch = e.target.value.toLowerCase();
+      document.getElementById('clearSearchBtn').classList.toggle('hidden', state.catalogSearch === '');
+      renderCatalogList();
+    });
+
+    function setRightTab(tab) {
+      state.rightTab = tab;
+      document.getElementById('rtab-audit').classList.toggle('border-sky-500', tab === 'audit');
+      document.getElementById('rtab-audit').classList.toggle('text-sky-400', tab === 'audit');
+      document.getElementById('rtab-buffs').classList.toggle('border-sky-500', tab === 'buffs');
+      document.getElementById('rtab-buffs').classList.toggle('text-sky-400', tab === 'buffs');
+      document.getElementById('rightPanelAudit').classList.toggle('hidden', tab !== 'audit');
+      document.getElementById('rightPanelBuffs').classList.toggle('hidden', tab !== 'buffs');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('statusToast');
+      t.textContent = msg;
+      t.classList.remove('opacity-0');
+      setTimeout(() => t.classList.add('opacity-0'), 2500);
+    }
+
+    function zoomBy(f) {
+      camera.zoom = Math.max(0.15, Math.min(3.5, camera.zoom * f));
+      document.getElementById('zoomLabel').textContent = `${Math.round(camera.zoom * 100)}%`;
+      requestRender();
+    }
+
+    function resetCamera() {
+      focusGridRect(1, 1, 60, 60);
+    }
+
+    function focusGridRect(gx, gy, gw, gh) {
+      // Отступы сверху и снизу под плавающие панели интерфейса, чтобы карта не перекрывалась ими
+      const padX = 48;
+      const padY = 125;
+      const availW = Math.max(120, canvas.width - padX * 2);
+      const availH = Math.max(120, canvas.height - padY * 2);
+
+      if (state.viewMode === 'iso') {
+        const c1 = gridToScreenIso(gx, gy);
+        const c2 = gridToScreenIso(gx + gw, gy);
+        const c3 = gridToScreenIso(gx + gw, gy + gh);
+        const c4 = gridToScreenIso(gx, gy + gh);
+
+        const minX = Math.min(c1.x, c2.x, c3.x, c4.x);
+        const maxX = Math.max(c1.x, c2.x, c3.x, c4.x);
+        const minY = Math.min(c1.y, c2.y, c3.y, c4.y);
+        const maxY = Math.max(c1.y, c2.y, c3.y, c4.y);
+
+        const boxW = Math.max(1, maxX - minX);
+        const boxH = Math.max(1, maxY - minY);
+
+        const zoomX = availW / boxW;
+        const zoomY = availH / boxH;
+        camera.zoom = Math.max(0.15, Math.min(3.5, Math.min(zoomX, zoomY)));
+
+        const centerX = (minX + maxX) / 2;
+        const centerY = (minY + maxY) / 2;
+        camera.x = -centerX * camera.zoom;
+        camera.y = -centerY * camera.zoom;
+      } else {
+        const cellSize = CELL_2D;
+        const originX = -(GRID_SIZE * cellSize) / 2;
+        const originY = -(GRID_SIZE * cellSize) / 2;
+
+        const minX = originX + (gx - 1) * cellSize;
+        const maxX = originX + (gx - 1 + gw) * cellSize;
+        const minY = originY + (gy - 1) * cellSize;
+        const maxY = originY + (gy - 1 + gh) * cellSize;
+
+        const boxW = Math.max(1, maxX - minX);
+        const boxH = Math.max(1, maxY - minY);
+
+        camera.zoom = Math.max(0.15, Math.min(3.5, Math.min(availW / boxW, availH / boxH)));
+
+        const centerX = (minX + maxX) / 2;
+        const centerY = (minY + maxY) / 2;
+        camera.x = -centerX * camera.zoom;
+        camera.y = -centerY * camera.zoom;
+      }
+
+      document.getElementById('zoomLabel').textContent = `${Math.round(camera.zoom * 100)}%`;
+      requestRender();
+    }
+
+    function saveCustomView() {
+      const viewData = {
+        x: camera.x,
+        y: camera.y,
+        zoom: camera.zoom
+      };
+      localStorage.setItem('island_custom_view', JSON.stringify(viewData));
+      updateCustomViewBtnState();
+      showToast(`Текущий вид сохранён (Масштаб: ${Math.round(camera.zoom * 100)}%)!`);
+    }
+
+    function applyCustomView() {
+      const raw = localStorage.getItem('island_custom_view');
+      if (!raw) return;
+      try {
+        const v = JSON.parse(raw);
+        if (typeof v.x === 'number' && typeof v.y === 'number' && typeof v.zoom === 'number') {
+          camera.x = v.x;
+          camera.y = v.y;
+          camera.zoom = v.zoom;
+          document.getElementById('zoomLabel').textContent = `${Math.round(camera.zoom * 100)}%`;
+          requestRender();
+          showToast("Переход к сохранённому виду");
+        }
+      } catch (e) {}
+    }
+
+    function updateCustomViewBtnState() {
+      const btn = document.getElementById('myViewBtn');
+      if (!btn) return;
+      const hasSaved = !!localStorage.getItem('island_custom_view');
+      btn.disabled = !hasSaved;
+      if (hasSaved) {
+        btn.classList.remove('text-slate-500', 'opacity-50', 'cursor-not-allowed');
+        btn.classList.add('text-slate-200', 'hover:bg-slate-800', 'hover:text-white', 'cursor-pointer');
+        btn.title = "Перейти к сохранённому ракурсу";
+      } else {
+        btn.classList.add('text-slate-500', 'opacity-50', 'cursor-not-allowed');
+        btn.classList.remove('text-slate-200', 'hover:bg-slate-800', 'hover:text-white', 'cursor-pointer');
+        btn.title = "Сначала сохраните нужный ракурс кнопкой справа";
+      }
+    }
+
+    function refreshActiveBanner() {
+      const item = ITEM_BY_ID[state.selectedItemId];
+      if (!item) return;
+      const count = state.counts[item.id] || 0;
+      document.getElementById('activeItemBanner').innerHTML = `
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center overflow-hidden shrink-0">
+            ${item.imgIcon ? `<img src="${item.imgIcon}" class="w-full h-full object-cover" />` : `<i class="fa-solid fa-cube text-sky-400"></i>`}
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs font-bold text-white truncate">${item.name}</div>
+            <div class="text-[10px] text-slate-400 flex items-center gap-2">
+              <span>Размер: <b class="text-slate-200">${item.w}×${item.h}</b></span>
+              <span>Лимит: <b class="text-slate-200">${count}/${item.limit}</b></span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCatalogList() {
+      const list = document.getElementById('catalogList');
+      const search = state.catalogSearch;
+      const filter = state.catalogFilter;
+
+      const filtered = CATALOG.filter(it => {
+        if (filter !== 'all' && it.type !== filter && it.rarity !== filter) return false;
+        if (state.onlyAvailable && (state.counts[it.id] || 0) >= it.limit) return false;
+        if (search && !it.name.toLowerCase().includes(search)) return false;
+        return true;
+      });
+
+      list.innerHTML = filtered.map(it => {
+        const count = state.counts[it.id] || 0;
+        const isSelected = it.id === state.selectedItemId;
+        return `
+          <div onclick="selectItem(${it.id})" id="catalog-card-${it.id}" class="catalog-card group relative hover:z-40 p-2 hover:py-3.5 rounded-xl bg-slate-900 border ${isSelected ? 'selected' : 'border-slate-800 hover:border-sky-400 hover:bg-slate-800'} cursor-pointer transition-all duration-200 flex items-center gap-2.5 hover:shadow-2xl hover:shadow-black">
+            <div class="w-9 h-9 rounded-lg bg-slate-950 border border-slate-800 group-hover:border-sky-400 flex items-center justify-center overflow-hidden shrink-0 transition-all duration-200 ease-out origin-left group-hover:scale-[2.3] group-hover:z-50 group-hover:shadow-xl group-hover:shadow-black">
+              ${it.imgIcon ? `<img src="${it.imgIcon}" class="w-full h-full object-cover" />` : `<i class="fa-solid fa-cube text-xs text-sky-400"></i>`}
+            </div>
+            <div class="flex-1 min-w-0 transition-all duration-200 ease-out group-hover:translate-x-12 group-hover:pr-12">
+              <div class="text-xs font-semibold text-white group-hover:text-sky-300 truncate group-hover:whitespace-normal group-hover:overflow-visible leading-tight origin-left transition-all duration-200 ease-out group-hover:scale-[1.35]">${it.name}</div>
+              <div class="text-[10px] text-slate-400 group-hover:text-slate-200 flex items-center gap-2 mt-0.5 group-hover:mt-1.5 transition-all duration-200 ease-out origin-left group-hover:scale-[1.15]">
+                <span>${it.w}×${it.h}</span>
+                <span class="${count >= it.limit ? 'text-amber-400 font-bold' : ''}">Поставлено: ${count}/${it.limit}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+// Функция поиска и центрирования камеры на постройке, которая уже есть на карте
+    function focusOnBuilding(itemId) {
+      for (const p of state.placements.values()) {
+        if (p.itemId === itemId) {
+          focusGridRect(p.x, p.y, p.w, p.h);
+          showToast(`Найдено на карте: ${ITEM_BY_ID[itemId].name}`);
+          return;
+        }
+      }
+    }
+
+    // Функция выбора постройки в левом меню и активации режима строительства
+    function selectAndSwitchToCatalogItem(itemId) {
+      selectItem(itemId);
+      setTool('brush');
+      
+      // Скроллим левый каталог к выбранному элементу, если он есть
+      const card = document.getElementById(`catalog-card-${itemId}`);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      
+      showToast(`Выбрано для установки: ${ITEM_BY_ID[itemId].name}`);
+    }
+
+function refreshAllUI() {
+      refreshActiveBanner();
+      renderCatalogList();
+
+      let totalCells = 3600;
+      let buildingCells = 0, roadCells = 0, treeCells = 0, prosperity = 0;
+      const buffsMap = {};
+
+      for (const p of state.placements.values()) {
+        const item = ITEM_BY_ID[p.itemId];
+        if (!item) continue;
+        const area = p.w * p.h;
+        if (item.type === 'Лес') treeCells += area;
+        else if (item.type === 'Дороги') roadCells += area;
+        else {
+          buildingCells += area;
+          prosperity += item.bonus || 0;
+
+          if (item.buff && item.buff !== "Нет" && item.buff !== "Главное древо") {
+            buffsMap[item.buff] = (buffsMap[item.buff] || 0) + 1;
+          }
+        }
+      }
+
+      const buffsContainer = document.getElementById('rightPanelBuffs');
+      if (buffsContainer) {
+        const buffKeys = Object.keys(buffsMap);
+        if (buffKeys.length === 0) {
+          buffsContainer.innerHTML = `<div class="text-xs text-slate-500 text-center py-4">Нет активных баффов от построек</div>`;
+        } else {
+          buffsContainer.innerHTML = buffKeys.map(buffText => `
+            <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between">
+              <span class="text-xs font-medium text-slate-200">${buffText}</span>
+              <span class="text-xs font-mono font-bold text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">Активно</span>
+            </div>
+          `).join('');
+        }
+      }
+
+      const occupied = buildingCells + roadCells + treeCells;
+      document.getElementById('cellsUsedText').textContent = `${occupied} / ${totalCells} (${Math.round((occupied/totalCells)*100)}%)`;
+      document.getElementById('statBuildingsCells').textContent = buildingCells;
+      document.getElementById('statRoadsCells').textContent = roadCells;
+      document.getElementById('statTreesCells').textContent = treeCells;
+      document.getElementById('statProsperity').textContent = `+${prosperity.toLocaleString()}`;
+      document.getElementById('barBuildings').style.width = `${(buildingCells/totalCells)*100}%`;
+      document.getElementById('barRoads').style.width = `${(roadCells/totalCells)*100}%`;
+      document.getElementById('barTrees').style.width = `${(treeCells/totalCells)*100}%`;
+
+      // Чек-лист: разделение на задействованные и неиспользованные с умным разделителем
+      const limitedItems = CATALOG.filter(it => it.limit <= 10);
+      
+      const placedItems = [];
+      const unplacedItems = [];
+
+      limitedItems.forEach(it => {
+        const count = state.counts[it.id] || 0;
+        if (count > 0) {
+          placedItems.push({ it, count });
+        } else {
+          unplacedItems.push({ it, count });
+        }
+      });
+
+      const auditContainer = document.getElementById('rightPanelAudit');
+      
+      let htmlContent = '';
+
+      // 1. Секция задействованных построек (кликабельные названия для навигации на карте)
+      placedItems.forEach(({ it, count }) => {
+        htmlContent += `
+          <div class="py-1 px-2 rounded-lg border bg-slate-900/60 border-slate-800 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0 cursor-pointer group" onclick="focusOnBuilding(${it.id})" title="Кликните, чтобы найти на карте">
+              <i class="fa-solid fa-circle-check text-emerald-400 text-xs shrink-0"></i>
+              <div class="text-xs font-medium text-slate-200 group-hover:text-sky-300 truncate transition">${it.name}</div>
+            </div>
+            <span class="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300">
+              ${count}/${it.limit}
+            </span>
+          </div>
+        `;
+      });
+
+      // 2. Умный разделитель
+      if (placedItems.length > 0 && unplacedItems.length > 0) {
+        htmlContent += `
+          <div class="flex items-center gap-2 my-2">
+            <div class="h-px bg-slate-800 flex-1"></div>
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Не использовано (${unplacedItems.length})</span>
+            <div class="h-px bg-slate-800 flex-1"></div>
+          </div>
+        `;
+      }
+
+      // 3. Секция неиспользованных построек (кликабельные названия для выбора в левом меню)
+      unplacedItems.forEach(({ it, count }) => {
+        htmlContent += `
+          <div class="py-1 px-2 rounded-lg border bg-rose-950/20 border-rose-500/30 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0 cursor-pointer group" onclick="selectAndSwitchToCatalogItem(${it.id})" title="Кликните, чтобы выбрать для установки">
+              <i class="fa-solid fa-circle-exclamation text-amber-400 text-xs shrink-0"></i>
+              <div class="text-xs font-medium text-slate-200 group-hover:text-amber-300 truncate transition">${it.name}</div>
+            </div>
+            <span class="text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300">
+              ${count}/${it.limit}
+            </span>
+          </div>
+        `;
+      });
+
+      auditContainer.innerHTML = htmlContent;
+    }
+    
+  
+    // =========================================================================
+    // MODALS & EXPORT ENGINE (Проекты, PNG, Паспорт)
+    // =========================================================================
+
+    // 1. Модальное окно проектов (Сохранение / Загрузка)
+    function openSlotsModal() {
+      document.getElementById('slotsModal').classList.remove('hidden');
+      document.getElementById('slotsModal').classList.add('flex');
+      renderSavedSlotsList();
+    }
+
+    function closeSlotsModal() {
+      document.getElementById('slotsModal').classList.remove('flex');
+      document.getElementById('slotsModal').classList.add('hidden');
+    }
+
+function saveToLocalSlot() {
+      const nameInput = document.getElementById('saveSlotNameInput');
+      const slotName = nameInput.value.trim() || state.projectName || "Мой проект";
+      state.projectName = slotName;
+      
+      const saveData = {
+        name: slotName,
+        date: new Date().toLocaleString(),
+        snapshot: cloneSnapshot()
+      };
+
+      let slots = JSON.parse(localStorage.getItem('island_slots') || '[]');
+      const existingIdx = slots.findIndex(s => s.name.toLowerCase() === slotName.toLowerCase());
+      if (existingIdx !== -1) {
+        slots[existingIdx] = saveData;
+      } else {
+        slots.unshift(saveData);
+      }
+
+      localStorage.setItem('island_slots', JSON.stringify(slots));
+      const selectedIdx = existingIdx !== -1 ? existingIdx : 0;
+      syncPresetSelectDropdown(`custom_${selectedIdx}`);
+      showToast(`Проект «${slotName}» добавлен в постоянный список проектов!`);
+      nameInput.value = '';
+      renderSavedSlotsList();
+    }
+
+    function renderSavedSlotsList() {
+      const container = document.getElementById('savedSlotsContainer');
+      const slots = JSON.parse(localStorage.getItem('island_slots') || '[]');
+
+      if (slots.length === 0) {
+        container.innerHTML = `<div class="text-xs text-slate-500 text-center py-3">Нет сохраненных проектов</div>`;
+        return;
+      }
+
+      container.innerHTML = slots.map((slot, index) => `
+        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <div class="text-xs font-semibold text-white truncate">${slot.name}</div>
+            <div class="text-[10px] text-slate-400">${slot.date}</div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button onclick="loadSlotByIndex(${index})" class="px-2.5 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-[11px] font-medium text-white transition">Загрузить</button>
+            <button onclick="deleteSlotByIndex(${index})" class="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-rose-400 transition"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function loadSlotByIndex(index) {
+      const slots = JSON.parse(localStorage.getItem('island_slots') || '[]');
+      if (slots[index]) {
+        restoreSnapshot(slots[index].snapshot);
+        closeSlotsModal();
+        showToast(`Проект «${slots[index].name}» успешно загружен!`);
+      }
+    }
+
+function deleteSlotByIndex(index) {
+      let slots = JSON.parse(localStorage.getItem('island_slots') || '[]');
+      slots.splice(index, 1);
+      localStorage.setItem('island_slots', JSON.stringify(slots));
+      syncPresetSelectDropdown();
+      renderSavedSlotsList();
+      showToast("Проект удален из списка");
+    }
+
+    function exportProjectJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cloneSnapshot(), null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `${state.projectName.replace(/\s+/g, '_')}_layout.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast("JSON файл проекта успешно скачан!");
+    }
+
+    function importProjectJSON(event) {
+      const fileReader = new FileReader();
+      if (event.target.files[0]) {
+        fileReader.readAsText(event.target.files[0], "UTF-8");
+        fileReader.onload = e => {
+          try {
+            const parsed = JSON.parse(e.target.result);
+            restoreSnapshot(parsed);
+            closeSlotsModal();
+            showToast("Проект из JSON файла успешно загружен!");
+          } catch (err) {
+            alert("Ошибка чтения JSON файла: " + err.message);
+          }
+        };
+      }
+    }
+
+// 2. Режим чистящего скриншота с авто-скрытием интерфейса и центровкой
+    function exportCanvasPNG() {
+      // 1. Идеально центрируем и масштабируем всю сетку острова по центру экрана
+      const centerGx = (GRID_SIZE / 2) + 1;
+      const centerGy = (GRID_SIZE / 2) + 1;
+      const cp = gridToScreenIso(centerGx, centerGy);
+      
+      camera.x = -cp.x * 0.7; 
+      camera.y = -cp.y * 0.7;
+      camera.zoom = 0.62; 
+      requestRender();
+
+      // 2. Скрываем боковые панели, шапку и плашки интерфейса
+      const uiElements = document.querySelectorAll('header, aside, .absolute.top-4, footer, nav');
+      uiElements.forEach(el => el.style.display = 'none');
+
+      // 3. Создаем временную плавающую кнопку для возврата интерфейса
+      const floatBar = document.createElement('div');
+      floatBar.id = 'screenshotModeBar';
+      floatBar.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 border border-amber-500/50 px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-4 backdrop-blur-md';
+      floatBar.innerHTML = `
+        <div class="text-xs text-white">
+          📸 <b class="text-amber-400">Режим скриншота:</b> Сделайте снимок (<b class="text-sky-400">Win + Shift + S</b>)
+        </div>
+        <button onclick="exitScreenshotMode()" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition shadow-lg">
+          Готово / Вернуть меню
+        </button>
+      `;
+      document.body.appendChild(floatBar);
+    }
+
+    function exitScreenshotMode() {
+      // Возвращаем все элементы интерфейса на место
+      const uiElements = document.querySelectorAll('header, aside, .absolute.top-4, footer, nav');
+      uiElements.forEach(el => el.style.display = '');
+
+      // Удаляем временную плавающую панель
+      const bar = document.getElementById('screenshotModeBar');
+      if (bar) bar.remove();
+      requestRender();
+    }
+
+    // 3. Инженерный паспорт и матрица координат
+    function openPassportModal() {
+      document.getElementById('passportModal').classList.remove('hidden');
+      document.getElementById('passportModal').classList.add('flex');
+      generatePassportContent();
+    }
+
+    function closePassportModal() {
+      document.getElementById('passportModal').classList.remove('flex');
+      document.getElementById('passportModal').classList.add('hidden');
+    }
+
+function generatePassportContent() {
+      // 1. Концептуальная часть
+      let contentHTML = `
+        <div class="space-y-4 text-slate-200 text-sm">
+          <div>
+            <h3 class="text-amber-400 font-bold mb-1">1. КОНЦЕПТУАЛЬНЫЙ ПАСПОРТ ПРОЕКТА</h3>
+            <p><b>Название:</b> ${state.projectName}</p>
+            <p><b>Общая сетка:</b> 60×60 клеток (3600 ячеек)</p>
+          </div>
+
+          <div>
+            <h3 class="text-amber-400 font-bold mb-2">2. СПЕЦИФИКАЦИЯ РАЗМЕЩЕННЫХ ОБЪЕКТОВ</h3>
+            <div class="grid grid-cols-1 gap-1 bg-slate-900/50 p-3 rounded-xl border border-slate-800 max-h-48 overflow-y-auto">
+      `;
+
+      CATALOG.forEach(it => {
+        const cnt = state.counts[it.id] || 0;
+        if (cnt > 0) {
+          contentHTML += `<div class="text-xs text-slate-300">• ${it.name} (${it.w}×${it.h}) — <b>${cnt} / ${it.limit}</b> шт.</div>`;
+        }
+      });
+
+      contentHTML += `
+            </div>
+          </div>
+
+          <div>
+            <details class="group bg-slate-900/80 border border-slate-800 rounded-xl overflow-hidden">
+              <summary class="px-4 py-3 cursor-pointer text-amber-400 font-bold text-xs flex items-center justify-between hover:bg-slate-800/50 transition">
+                <span>3. МАТРИЦА КООРДИНАТ ПОСТРОЕК (развернуть)</span>
+                <i class="fa-solid fa-chevron-down group-open:rotate-180 transition-transform"></i>
+              </summary>
+              <div class="p-3 border-t border-slate-800 max-h-60 overflow-y-auto space-y-1 text-xs text-slate-400 font-mono">
+      `;
+
+      for (const p of state.placements.values()) {
+        const it = ITEM_BY_ID[p.itemId];
+        if (it) {
+          contentHTML += `<div>• ${it.name}: X:[${p.x}..${p.x + p.w - 1}], Y:[${p.y}..${p.y + p.h - 1}]</div>`;
+        }
+      }
+
+      contentHTML += `
+              </div>
+            </details>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('passportModalContent').innerHTML = contentHTML;
+    }
+
+    function copyPassportText() {
+      const text = document.getElementById('passportModalContent').innerText;
+      navigator.clipboard.writeText(text);
+      showToast("Паспорт скопирован в буфер обмена!");
+    }
+
+    function downloadPassportMarkdown() {
+      const text = document.getElementById('passportModalContent').innerText;
+      const blob = new Blob([text], { type: 'text/markdown;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `${state.projectName.replace(/\s+/g, '_')}_Passport.md`;
+      link.click();
+      showToast("Паспорт в формате .MD скачан!");
+    }
+
+// Функция заполнения пустых клеток оставшимся лесом («Авто-лес пустот»)
+function autoFillEmptyWithForest() {
+  pushHistory();
+  const forestIds = [80, 81, 82, 83, 84, 78, 79];
+  let filledCount = 0;
+
+  for (let y = 1; y <= GRID_SIZE; y++) {
+    for (let x = 1; x <= GRID_SIZE; x++) {
+      if (state.grid[y][x] === 0) {
+        // Выбираем случайный тип дерева из доступных, не превышая лимиты
+        const randomForestId = forestIds[Math.floor(Math.random() * forestIds.length)];
+        const item = ITEM_BY_ID[randomForestId];
+        
+        if ((state.counts[randomForestId] || 0) < item.limit) {
+          const res = placeObjectDirect(randomForestId, x, y, 1, 1, false);
+          if (res.ok && !res.skipped) filledCount++;
+        }
+      }
+    }
+  }
+  
+  detectReserveBlocks();
+  refreshAllUI();
+  requestRender();
+  showToast(`Заполнено пустыми деревьями: ${filledCount}`);
+}
+
+// Функция удаления всего леса («Срубить лес»)
+function clearCategory(categoryName) {
+  pushHistory();
+  let removedCount = 0;
+
+  // Ищем все размещенные объекты указанной категории («Лес») и удаляем их
+  for (const [uid, p] of [...state.placements.entries()]) {
+    const item = ITEM_BY_ID[p.itemId];
+    if (item && item.type === categoryName) {
+      removeUid(uid);
+      removedCount++;
+    }
+  }
+
+  detectReserveBlocks();
+  refreshAllUI();
+  requestRender();
+  showToast(`Срублено объектов (${categoryName}): ${removedCount}`);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+      syncPresetSelectDropdown();
+      resizeCanvas();
+      focusGridRect(1, 1, 60, 60);
+      updateCustomViewBtnState();
+      selectItem(1);
+      refreshAllUI();
+    });
+  </script>
+</body>
+</html>

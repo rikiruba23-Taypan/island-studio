@@ -2592,43 +2592,111 @@ function deleteSlotByIndex(index) {
       }
     }
 
-// 2. Режим чистящего скриншота с авто-скрытием интерфейса и центровкой
+// 2. Прямая выгрузка всего острова 60×60 в Ultra-HD PNG (с резервным режимом для локального запуска)
     function exportCanvasPNG() {
-      // 1. Идеально центрируем и масштабируем всю сетку острова по центру экрана
-      const centerGx = (GRID_SIZE / 2) + 1;
-      const centerGy = (GRID_SIZE / 2) + 1;
-      const cp = gridToScreenIso(centerGx, centerGy);
-      
-      camera.x = -cp.x * 0.7; 
-      camera.y = -cp.y * 0.7;
-      camera.zoom = 0.62; 
-      requestRender();
+      const origW = canvas.width;
+      const origH = canvas.height;
+      const origCamX = camera.x;
+      const origCamY = camera.y;
+      const origZoom = camera.zoom;
+      const origGridX = pointer.gridX;
+      const origGridY = pointer.gridY;
 
-      // 2. Скрываем боковые панели, шапку и плашки интерфейса
-      const uiElements = document.querySelectorAll('header, aside, .absolute.top-4, footer, nav');
-      uiElements.forEach(el => el.style.display = 'none');
+      try {
+        // Убираем подсветку курсора, чтобы на рендере была чистая карта
+        pointer.gridX = null;
+        pointer.gridY = null;
 
-      // 3. Создаем временную плавающую кнопку для возврата интерфейса
-      const floatBar = document.createElement('div');
-      floatBar.id = 'screenshotModeBar';
-      floatBar.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 border border-amber-500/50 px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-4 backdrop-blur-md';
-      floatBar.innerHTML = `
-        <div class="text-xs text-white">
-          📸 <b class="text-amber-400">Режим скриншота:</b> Сделайте снимок (<b class="text-sky-400">Win + Shift + S</b>)
-        </div>
-        <button onclick="exitScreenshotMode()" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition shadow-lg">
-          Готово / Вернуть меню
-        </button>
-      `;
-      document.body.appendChild(floatBar);
+        if (state.viewMode === 'iso') {
+          // Полный размер изометрического ромба 60x60 в масштабе 100% с запасом под высокие башни
+          canvas.width = 3920;
+          canvas.height = 2920;
+          camera.zoom = 1.0;
+          camera.x = 0;
+          camera.y = -1300;
+        } else {
+          canvas.width = 1480;
+          canvas.height = 1480;
+          camera.zoom = 1.0;
+          camera.x = 0;
+          camera.y = 0;
+        }
+
+        // Синхронно отрисовываем сцену в высоком разрешении
+        renderScene();
+
+        // Рисуем аккуратную информационную плашку проекта в верхнем левом углу рендера
+        const occupiedText = document.getElementById('cellsUsedText')?.textContent || '';
+        const prosperityText = document.getElementById('statProsperity')?.textContent || '+0';
+        ctx.save();
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+        ctx.lineWidth = 2;
+        ctx.fillRect(40, 40, 560, 130);
+        ctx.strokeRect(40, 40, 560, 130);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 28px Inter, sans-serif';
+        ctx.fillText(`Остров Рассвета: ${state.projectName}`, 65, 85);
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = '600 20px JetBrains Mono, monospace';
+        ctx.fillText(`Занято: ${occupiedText}   •   Процветание: ${prosperityText}`, 65, 135);
+        ctx.restore();
+
+        // Формируем PNG и запускаем скачивание
+        const dataUrl = canvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        const safeName = (state.projectName || 'Island_60x60').replace(/\s+/g, '_');
+        link.download = `${safeName}_full_map.png`;
+        link.href = dataUrl;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        // Мгновенно возвращаем экран пользователя в исходное состояние
+        canvas.width = origW;
+        canvas.height = origH;
+        camera.x = origCamX;
+        camera.y = origCamY;
+        camera.zoom = origZoom;
+        pointer.gridX = origGridX;
+        pointer.gridY = origGridY;
+        renderScene();
+
+        showToast("Полная карта острова (Ultra-HD PNG) скачана!");
+      } catch (err) {
+        // Восстанавливаем холст и включаем резервный режим скриншота, если открыто локально через file://
+        canvas.width = origW;
+        canvas.height = origH;
+        camera.x = origCamX;
+        camera.y = origCamY;
+        camera.zoom = origZoom;
+        pointer.gridX = origGridX;
+        pointer.gridY = origGridY;
+
+        focusGridRect(1, 1, 60, 60);
+        const uiElements = document.querySelectorAll('header, aside, .absolute.top-3, .absolute.bottom-3, footer, nav');
+        uiElements.forEach(el => el.style.display = 'none');
+
+        const floatBar = document.createElement('div');
+        floatBar.id = 'screenshotModeBar';
+        floatBar.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 border border-amber-500/50 px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-4 backdrop-blur-md';
+        floatBar.innerHTML = `
+          <div class="text-xs text-white">
+            📸 <b class="text-amber-400">Режим скриншота:</b> Сделайте снимок (<b class="text-sky-400">Win + Shift + S</b>)
+          </div>
+          <button onclick="exitScreenshotMode()" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition shadow-lg">
+            Готово / Вернуть меню
+          </button>
+        `;
+        document.body.appendChild(floatBar);
+      }
     }
 
     function exitScreenshotMode() {
-      // Возвращаем все элементы интерфейса на место
-      const uiElements = document.querySelectorAll('header, aside, .absolute.top-4, footer, nav');
+      const uiElements = document.querySelectorAll('header, aside, .absolute.top-3, .absolute.bottom-3, footer, nav');
       uiElements.forEach(el => el.style.display = '');
-
-      // Удаляем временную плавающую панель
       const bar = document.getElementById('screenshotModeBar');
       if (bar) bar.remove();
       requestRender();

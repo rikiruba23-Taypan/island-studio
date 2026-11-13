@@ -123,7 +123,20 @@
       </div>
 
     <div class="flex items-center gap-2">
-      <div class="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800">
+      <!-- Инструменты точного переноса в игру: Изоляция, Прораб, Рулетка -->
+      <div class="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800 gap-0.5">
+        <button onclick="toggleIsolationMode()" id="tool-isolate" title="Режим Изоляции: оставить на чистом поле только выбранный тип построек (Клавиша I / Esc)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-semibold text-cyan-300 hover:text-white transition flex items-center gap-1 border border-transparent">
+          <i class="fa-solid fa-eye"></i>
+          <span class="hidden xl:inline">Изоляция</span>
+        </button>
+        <button onclick="setTool('foreman')" id="tool-foreman" title="Режим Прораба: отмечать галочкой перенесённые в игру постройки (Клавиша P)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-semibold text-emerald-300 hover:text-white transition flex items-center gap-1 border border-transparent">
+          <i class="fa-solid fa-clipboard-check"></i>
+          <span class="hidden xl:inline">Прораб</span>
+        </button>
+        <button onclick="setTool('ruler')" id="tool-ruler" title="Рулетка: замер расстояния и сдвига X/Y от опорной постройки (Клавиша K)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-semibold text-amber-300 hover:text-white transition flex items-center gap-1 border border-transparent">
+          <i class="fa-solid fa-ruler-combined"></i>
+          <span class="hidden xl:inline">Рулетка</span>
+        </button>
       </div>
 
       <div class="h-6 w-px bg-slate-800"></div>
@@ -145,7 +158,7 @@
           <i class="fa-solid fa-slash"></i>
           <span class="hidden 2xl:inline">Линия</span>
         </button>
-<button onclick="setTool('move')" id="tool-move" title="Двигать постройку без удаления соседних (Клавиша M)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-medium text-slate-300 hover:text-white transition flex items-center gap-1 border border-transparent">
+        <button onclick="setTool('move')" id="tool-move" title="Двигать постройку без удаления соседних (Клавиша M)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-medium text-slate-300 hover:text-white transition flex items-center gap-1 border border-transparent">
           <i class="fa-solid fa-up-down-left-right"></i>
           <span class="hidden 2xl:inline">Двигать</span>
         </button>
@@ -153,11 +166,13 @@
           <i class="fa-solid fa-object-group"></i>
           <span class="hidden 2xl:inline">Перенос зоны</span>
         </button>
-        <button onclick="setTool('delete_type')" id="tool-delete_type" title="Удалить все постройки выбранного типа (ЛКМ по объекту)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-medium text-rose-300 hover:text-rose-100 transition flex items-center gap-1 border border-transparent">
+        <button onclick="setTool('delete_type')" id="tool-delete_type" title="Удалить все постройки выбранного типа (Клавиша T / Del)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-medium text-rose-300 hover:text-rose-100 transition flex items-center gap-1 border border-transparent">
           <i class="fa-solid fa-broom"></i>
           <span class="hidden 2xl:inline">Тип</span>
-        </button>        <button onclick="setTool('erase')" id="tool-erase" title="Ластик (Клавиша E)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-medium text-slate-300 hover:text-white transition flex items-center gap-1 border border-transparent">
+        </button>
+        <button onclick="setTool('erase')" id="tool-erase" title="Ластик (Клавиша E)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-medium text-slate-300 hover:text-white transition flex items-center gap-1 border border-transparent">
           <i class="fa-solid fa-eraser"></i>
+          <span class="hidden 2xl:inline">Ластик</span>
         </button>
         <button onclick="setTool('fill')" id="tool-fill" title="Заливка замкнутой области (Клавиша G)" class="tool-btn px-2.5 py-1 rounded-md text-xs font-medium text-slate-300 hover:text-white transition flex items-center gap-1 border border-transparent">
           <i class="fa-solid fa-fill-drip"></i>
@@ -244,34 +259,74 @@
 
     <!-- CENTER VIEWPORT -->
     <main class="flex-1 relative bg-slate-950 overflow-hidden flex flex-col">
-      <div class="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none z-10">
-        <div class="glass-panel px-3 py-1.5 rounded-xl flex items-center gap-3 pointer-events-auto shadow-lg">
-          <div class="flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
-            <span class="text-xs font-mono font-bold text-sky-300" id="hudCoords">X: --, Y: --</span>
+      <div class="absolute top-3 left-3 right-3 flex flex-col gap-2 pointer-events-none z-10">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <!-- Координаты и инфо о клетке -->
+          <div class="glass-panel px-3 py-1.5 rounded-xl flex items-center gap-3 pointer-events-auto shadow-lg">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+              <span class="text-xs font-mono font-bold text-sky-300" id="hudCoords">X: --, Y: --</span>
+            </div>
+            <div class="h-3.5 w-px bg-slate-700"></div>
+            <div class="text-xs text-slate-300 truncate max-w-[260px]" id="hudCellInfo">Наведите курсор на сетку острова</div>
           </div>
-          <div class="h-3.5 w-px bg-slate-700"></div>
-          <div class="text-xs text-slate-300 truncate max-w-[280px]" id="hudCellInfo">Наведите курсор на сетку острова</div>
+
+          <!-- Поэтапный мастер сборки (Детальные слои по категориям) -->
+          <div class="glass-panel px-2 py-1 rounded-xl flex flex-wrap items-center gap-1 pointer-events-auto shadow-lg text-xs">
+            <span class="text-[10px] font-mono uppercase text-slate-400 px-1 hidden 2xl:inline"><i class="fa-solid fa-layer-group text-sky-400 mr-1"></i>Слои:</span>
+            <button onclick="toggleLayer('buildings')" id="layer-btn-buildings" title="Слой 1: Здания и постройки из магазина/ивентов" class="px-2 py-0.5 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-semibold text-[11px] transition flex items-center gap-1">
+              <span>1. Здания</span>
+            </button>
+            <button onclick="toggleLayer('roads')" id="layer-btn-roads" title="Слой 2: Тротуары, тропы и каменная кладка" class="px-2 py-0.5 rounded-lg bg-slate-400/20 border border-slate-400/40 text-slate-200 font-semibold text-[11px] transition flex items-center gap-1">
+              <span>2. Дорожки</span>
+            </button>
+            <button onclick="toggleLayer('water')" id="layer-btn-water" title="Слой 3: Бассейн с подогревом (вода)" class="px-2 py-0.5 rounded-lg bg-sky-500/20 border border-sky-500/40 text-sky-300 font-semibold text-[11px] transition flex items-center gap-1">
+              <span>3. Вода</span>
+            </button>
+            <button onclick="toggleLayer('fences')" id="layer-btn-fences" title="Слой 4: Заборы, палисады и живые изгороди" class="px-2 py-0.5 rounded-lg bg-orange-500/20 border border-orange-500/40 text-orange-300 font-semibold text-[11px] transition flex items-center gap-1">
+              <span>4. Заборы</span>
+            </button>
+            <button onclick="toggleLayer('flora')" id="layer-btn-flora" title="Слой 5: Цветочные клумбы и розарии" class="px-2 py-0.5 rounded-lg bg-pink-500/20 border border-pink-500/40 text-pink-300 font-semibold text-[11px] transition flex items-center gap-1">
+              <span>5. Цветы</span>
+            </button>
+            <button onclick="toggleLayer('decor')" id="layer-btn-decor" title="Слой 6: Мелкий декор 1×1 (фонари, лавки и т.д.)" class="px-2 py-0.5 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-300 font-semibold text-[11px] transition flex items-center gap-1">
+              <span>6. Декор</span>
+            </button>
+            <button onclick="toggleLayer('forest')" id="layer-btn-forest" title="Слой 7: Деревья и лес" class="px-2 py-0.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-semibold text-[11px] transition flex items-center gap-1">
+              <span>7. Лес</span>
+            </button>
+            <div class="h-3.5 w-px bg-slate-700 mx-0.5"></div>
+            <button onclick="setAllLayers(true)" title="Показать все слои" class="px-1.5 py-0.5 rounded hover:bg-slate-800 text-[10px] text-sky-300 hover:text-white font-semibold transition">Все</button>
+            <button onclick="setAllLayers(false)" title="Скрыть все слои (чтобы включить только нужные)" class="px-1.5 py-0.5 rounded hover:bg-slate-800 text-[10px] text-slate-400 hover:text-white transition">Скрыть</button>
+          </div>
+
+          <!-- Чекбоксы отображения -->
+          <div class="glass-panel px-2.5 py-1 rounded-xl flex items-center gap-2 pointer-events-auto shadow-lg text-xs">
+            <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
+              <input type="checkbox" id="showGridCheck" checked onchange="requestRender()" class="accent-sky-500 rounded" />
+              <span>Сетка</span>
+            </label>
+            <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
+              <input type="checkbox" id="showAxesCheck" checked onchange="requestRender()" class="accent-purple-500 rounded" />
+              <span>Оси</span>
+            </label>
+            <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
+              <input type="checkbox" id="showLabelsCheck" checked onchange="requestRender()" class="accent-amber-500 rounded" />
+              <span>Подписи</span>
+            </label>
+            <label class="flex items-center gap-1 cursor-pointer text-emerald-300 hover:text-emerald-200" title="Отображать зелёные галочки Прораба на карте">
+              <input type="checkbox" id="showBuiltMarksCheck" checked onchange="requestRender()" class="accent-emerald-500 rounded" />
+              <span>Отметки ✓</span>
+            </label>
+            <label class="flex items-center gap-1 cursor-pointer text-amber-300 hover:text-amber-200">
+              <input type="checkbox" id="showReservesCheck" checked onchange="requestRender()" class="accent-amber-500 rounded" />
+              <span>Резервы 3×3</span>
+            </label>
+          </div>
         </div>
 
-        <div class="glass-panel px-2.5 py-1 rounded-xl flex items-center gap-2 pointer-events-auto shadow-lg text-xs">
-          <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
-            <input type="checkbox" id="showGridCheck" checked onchange="requestRender()" class="accent-sky-500 rounded" />
-            <span>Сетка</span>
-          </label>
-          <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
-            <input type="checkbox" id="showAxesCheck" checked onchange="requestRender()" class="accent-purple-500 rounded" />
-            <span>Оси</span>
-          </label>
-          <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
-            <input type="checkbox" id="showLabelsCheck" checked onchange="requestRender()" class="accent-amber-500 rounded" />
-            <span>Подписи</span>
-          </label>
-          <label class="flex items-center gap-1 cursor-pointer text-amber-300 hover:text-amber-200">
-            <input type="checkbox" id="showReservesCheck" checked onchange="requestRender()" class="accent-amber-500 rounded" />
-            <span>Резервы 3×3</span>
-          </label>
-        </div>
+        <!-- Динамическая панель активного спецрежима (Изоляция / Прораб / Рулетка) -->
+        <div id="specialModeBanner" class="hidden self-center glass-panel px-4 py-1.5 rounded-xl border border-sky-500/50 shadow-2xl pointer-events-auto flex items-center gap-3 text-xs"></div>
       </div>
 
       <div id="canvasContainer" class="flex-1 w-full h-full relative">
@@ -617,7 +672,10 @@ CATALOG.forEach(it => {
       grid: Array.from({ length: GRID_SIZE + 1 }, () => new Int32Array(GRID_SIZE + 1)),
       nextUid: 1,
       counts: {},
-      reserves: []
+      reserves: [],
+      layers: { buildings: true, roads: true, water: true, fences: true, flora: true, decor: true, forest: true },
+      isolatedItemId: null,
+      rulerAnchor: null
     };
 
     CATALOG.forEach(it => state.counts[it.id] = 0);
@@ -627,7 +685,25 @@ CATALOG.forEach(it => {
     const MAX_HISTORY = 35;
 
     const camera = { x: 0, y: 0, zoom: 0.55 };
-    let pointer = { screenX: 0, screenY: 0, gridX: null, gridY: null, isDown: false, button: 0, isPanning: false, panStartX: 0, panStartY: 0, camStartX: 0, camStartY: 0, dragStartGrid: null };
+    let pointer = { screenX: 0, screenY: 0, gridX: null, gridY: null, isDown: false, button: 0, isPanning: false, panStartX: 0, panStartY: 0, camStartX: 0, camStartY: 0, dragStartGrid: null, foremanTargetState: null };
+
+    function isItemVisibleOnMap(itemId) {
+      if (state.isolatedItemId !== null) {
+        return itemId === state.isolatedItemId;
+      }
+      const item = ITEM_BY_ID[itemId];
+      if (!item) return false;
+      if (item.type === 'Лес') return state.layers.forest;
+      if (item.type === 'Декор') return state.layers.decor;
+      if (item.type === 'Дороги') {
+        if (item.netKind === 'road') return state.layers.roads;
+        if (item.netKind === 'water') return state.layers.water;
+        if (item.netKind === 'fence' || item.netKind === 'hedge') return state.layers.fences;
+        if (item.netKind === 'flora') return state.layers.flora;
+        return state.layers.roads;
+      }
+      return state.layers.buildings;
+    }
 
     function resetGridState() {
       state.placements.clear();
@@ -640,7 +716,7 @@ CATALOG.forEach(it => {
     function cloneSnapshot() {
       const list = [];
       for (const p of state.placements.values()) {
-        list.push({ itemId: p.itemId, x: p.x, y: p.y, w: p.w, h: p.h });
+        list.push({ itemId: p.itemId, x: p.x, y: p.y, w: p.w, h: p.h, built: !!p.built });
       }
       return { projectName: state.projectName, list, reserves: JSON.parse(JSON.stringify(state.reserves)) };
     }
@@ -657,7 +733,11 @@ CATALOG.forEach(it => {
       state.projectName = snap.projectName || state.projectName;
       state.reserves = JSON.parse(JSON.stringify(snap.reserves || []));
       for (const item of snap.list) {
-        placeObjectDirect(item.itemId, item.x, item.y, item.w, item.h, true);
+        const res = placeObjectDirect(item.itemId, item.x, item.y, item.w, item.h, true);
+        if (res.ok && res.uid && item.built) {
+          const rec = state.placements.get(res.uid);
+          if (rec) rec.built = true;
+        }
       }
       detectReserveBlocks();
       refreshAllUI();
@@ -1112,6 +1192,9 @@ if (state.viewMode === 'iso') {
     const CELL_2D = 22;
 
     function renderIsoIsland(showGrid, showAxes, showLabels, showReserves) {
+      const showBuiltMarks = document.getElementById('showBuiltMarksCheck')?.checked ?? true;
+      const isIsolated = state.isolatedItemId !== null;
+
       ctx.fillStyle = '#0f172a';
       ctx.strokeStyle = '#1e293b';
       ctx.lineWidth = 2;
@@ -1128,10 +1211,16 @@ if (state.viewMode === 'iso') {
       ctx.fill();
       ctx.stroke();
 
-      if (showGrid) {
-        ctx.strokeStyle = 'rgba(51, 65, 85, 0.25)';
-        ctx.lineWidth = 1;
+      // Разметка сетки с выделением каждых 5 и 10 клеток и нумерацией по краям
+      if (showGrid || isIsolated) {
         for (let i = 1; i <= GRID_SIZE + 1; i++) {
+          const isTen = (i - 1) % 10 === 0;
+          const isFive = (i - 1) % 5 === 0;
+          ctx.strokeStyle = isTen
+            ? 'rgba(56, 189, 248, 0.45)'
+            : (isFive ? 'rgba(148, 163, 184, 0.32)' : 'rgba(51, 65, 85, 0.25)');
+          ctx.lineWidth = isTen ? 1.6 : (isFive ? 1.2 : 1);
+
           const a = gridToScreenIso(i, 1);
           const b = gridToScreenIso(i, GRID_SIZE + 1);
           ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
@@ -1140,10 +1229,23 @@ if (state.viewMode === 'iso') {
           const d = gridToScreenIso(GRID_SIZE + 1, i);
           ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(d.x, d.y); ctx.stroke();
         }
+
+        // Координатные числа по периметру поля (каждые 5 клеток)
+        ctx.save();
+        ctx.font = 'bold 11px JetBrains Mono, monospace';
+        ctx.fillStyle = 'rgba(125, 211, 252, 0.85)';
+        ctx.textAlign = 'center';
+        for (let idx = 5; idx <= GRID_SIZE; idx += 5) {
+          const posX = gridToScreenIso(idx + 0.5, 0.2);
+          ctx.fillText(`X:${idx}`, posX.x, posX.y);
+          const posY = gridToScreenIso(0.2, idx + 0.5);
+          ctx.fillText(`Y:${idx}`, posY.x, posY.y);
+        }
+        ctx.restore();
       }
 
       if (showAxes) {
-        ctx.strokeStyle = 'rgba(14, 165, 233, 0.5)';
+        ctx.strokeStyle = 'rgba(14, 165, 233, 0.55)';
         ctx.lineWidth = 2;
         const ax1 = gridToScreenIso(31, 1), ax2 = gridToScreenIso(31, GRID_SIZE + 1);
         ctx.beginPath(); ctx.moveTo(ax1.x, ax1.y); ctx.lineTo(ax2.x, ax2.y); ctx.stroke();
@@ -1154,6 +1256,7 @@ if (state.viewMode === 'iso') {
       const renderQueue = [];
 
       for (const p of state.placements.values()) {
+        if (!isItemVisibleOnMap(p.itemId)) continue;
         const item = ITEM_BY_ID[p.itemId];
         if (!item) continue;
         if (item.connectable && item.folderName) continue;
@@ -1167,6 +1270,7 @@ if (state.viewMode === 'iso') {
 
       const connGroups = buildConnectableGroups();
       for (const g of connGroups) {
+        if (!isItemVisibleOnMap(g.itemId)) continue;
         renderQueue.push({
           kind: 'connectable',
           g,
@@ -1184,8 +1288,27 @@ if (state.viewMode === 'iso') {
           const leftPos = gridToScreenIso(p.x, p.y + p.h);
           const rightPos = gridToScreenIso(p.x + p.w, p.y);
 
+          // В режиме изоляции подсвечиваем фундамент здания чёткой рамкой на сетке
+          if (isIsolated) {
+            ctx.fillStyle = 'rgba(56, 189, 248, 0.22)';
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(topPos.x, topPos.y);
+            ctx.lineTo(rightPos.x, rightPos.y);
+            ctx.lineTo(bottomPos.x, bottomPos.y);
+            ctx.lineTo(leftPos.x, leftPos.y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+          }
+
           const textureImg = item.imgBuilding ? imageCache[item.imgBuilding] : null;
 
+          ctx.save();
+          if (showBuiltMarks && p.built && state.tool === 'foreman') {
+            ctx.globalAlpha = 0.65;
+          }
           if (textureImg && textureImg.complete && textureImg.naturalWidth > 0) {
             const isoWidth = Math.abs(rightPos.x - leftPos.x);
             const drawW = isoWidth;
@@ -1206,24 +1329,65 @@ if (state.viewMode === 'iso') {
             ctx.strokeStyle = 'rgba(255,255,255,0.4)';
             ctx.stroke();
           }
+          ctx.restore();
 
-          if (showLabels && p.w >= 2 && p.h >= 2) {
+          const cx = (topPos.x + bottomPos.x) / 2;
+          const cy = (topPos.y + bottomPos.y) / 2;
+
+          if ((showLabels && p.w >= 2 && p.h >= 2) || isIsolated) {
+            ctx.save();
             ctx.fillStyle = '#ffffff';
-            ctx.font = '10px Inter, sans-serif';
+            ctx.font = 'bold 10px Inter, sans-serif';
             ctx.textAlign = 'center';
             ctx.shadowColor = '#000000';
             ctx.shadowBlur = 4;
-            ctx.fillText(item.name, (topPos.x + bottomPos.x) / 2, (topPos.y + bottomPos.y) / 2);
-            ctx.shadowBlur = 0;
+            if (p.w >= 2 || p.h >= 2) {
+              ctx.fillText(item.name, cx, cy - 4);
+            }
+            if (isIsolated || state.tool === 'foreman' || state.tool === 'ruler') {
+              ctx.fillStyle = '#fde047';
+              ctx.font = 'bold 11px JetBrains Mono, monospace';
+              ctx.fillText(`${p.x}:${p.y}`, cx, cy + 10);
+            }
+            ctx.restore();
+          }
+
+          // Отметка Прораба (✓) — контрастная тёмно-изумрудная заливка и крупный значок
+          if (showBuiltMarks && p.built) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(2, 44, 34, 0.68)';
+            ctx.strokeStyle = '#10b981';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(topPos.x, topPos.y);
+            ctx.lineTo(rightPos.x, rightPos.y);
+            ctx.lineTo(bottomPos.x, bottomPos.y);
+            ctx.lineTo(leftPos.x, leftPos.y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = '#10b981';
+            ctx.beginPath();
+            ctx.arc(cx, cy - 10, 14, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#022c22';
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 18px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('✓', cx, cy - 9);
+            ctx.restore();
           }
         } else {
           const g = entry.g;
           const item = ITEM_BY_ID[g.itemId];
           let textureImg = null;
 
-          const folderClean = g.type.replace(/\s+/g, '-');
-
-if (g.variant === 'single') {
+          if (g.variant === 'single') {
             textureImg = imageCache[item.imgBuilding];
           } else {
             const nameNoSpaces = g.type.replace(/\s+/g, '');
@@ -1257,6 +1421,69 @@ if (g.variant === 'single') {
             ctx.closePath();
             ctx.fill();
           }
+
+          // Для одиночных тайлов дорог в режиме Изоляции или Прораба рисуем координаты и галочки
+          for (let cyCell = g.minY; cyCell < g.minY + g.h; cyCell++) {
+            for (let cxCell = g.minX; cxCell < g.minX + g.w; cxCell++) {
+              const u = state.grid[cyCell]?.[cxCell];
+              const p = u ? state.placements.get(u) : null;
+              if (!p) continue;
+              const cTop = gridToScreenIso(cxCell, cyCell);
+              const cRight = gridToScreenIso(cxCell + 1, cyCell);
+              const cBottom = gridToScreenIso(cxCell + 1, cyCell + 1);
+              const cLeft = gridToScreenIso(cxCell, cyCell + 1);
+              const midX = (cTop.x + cBottom.x) / 2;
+              const midY = (cTop.y + cBottom.y) / 2;
+
+              if (isIsolated) {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
+                ctx.lineWidth = 1.2;
+                ctx.beginPath();
+                ctx.moveTo(cTop.x, cTop.y);
+                ctx.lineTo(cRight.x, cRight.y);
+                ctx.lineTo(cBottom.x, cBottom.y);
+                ctx.lineTo(cLeft.x, cLeft.y);
+                ctx.closePath();
+                ctx.stroke();
+
+                ctx.fillStyle = '#fde047';
+                ctx.font = 'bold 9px JetBrains Mono, monospace';
+                ctx.textAlign = 'center';
+                ctx.shadowColor = '#000';
+                ctx.shadowBlur = 3;
+                ctx.fillText(`${cxCell}:${cyCell}`, midX, midY + 3);
+                ctx.restore();
+              }
+
+              if (showBuiltMarks && p.built) {
+                ctx.save();
+                ctx.fillStyle = 'rgba(2, 44, 34, 0.72)';
+                ctx.strokeStyle = '#10b981';
+                ctx.lineWidth = 1.8;
+                ctx.beginPath();
+                ctx.moveTo(cTop.x, cTop.y);
+                ctx.lineTo(cRight.x, cRight.y);
+                ctx.lineTo(cBottom.x, cBottom.y);
+                ctx.lineTo(cLeft.x, cLeft.y);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#10b981';
+                ctx.beginPath();
+                ctx.arc(midX, midY, 9, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 13px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('✓', midX, midY + 0.5);
+                ctx.restore();
+              }
+            }
+          }
         }
       }
 
@@ -1281,6 +1508,96 @@ if (g.variant === 'single') {
         ctx.setLineDash([]);
       }
 
+      // Отрисовка Рулетки (Опорная точка + Линии смещения по осям X и Y)
+      if (state.rulerAnchor) {
+        const ra = state.rulerAnchor;
+        const aTop = gridToScreenIso(ra.x, ra.y);
+        const aRight = gridToScreenIso(ra.x + ra.w, ra.y);
+        const aBottom = gridToScreenIso(ra.x + ra.w, ra.y + ra.h);
+        const aLeft = gridToScreenIso(ra.x, ra.y + ra.h);
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.28)';
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(aTop.x, aTop.y);
+        ctx.lineTo(aRight.x, aRight.y);
+        ctx.lineTo(aBottom.x, aBottom.y);
+        ctx.lineTo(aLeft.x, aLeft.y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        const acx = (aTop.x + aBottom.x) / 2;
+        const acy = (aTop.y + aBottom.y) / 2;
+        ctx.fillStyle = '#fbbf24';
+        ctx.font = 'bold 11px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.shadowColor = '#000';
+        ctx.shadowBlur = 4;
+        ctx.fillText(`⚓ ОПОРА [${ra.x}:${ra.y}]`, acx, acy - 10);
+
+        if (pointer.gridX !== null && pointer.gridY !== null) {
+          let tx = pointer.gridX;
+          let ty = pointer.gridY;
+          let tw = 1, th = 1;
+          const hoverUid = state.grid[ty]?.[tx];
+          if (hoverUid) {
+            const hp = state.placements.get(hoverUid);
+            if (hp && isItemVisibleOnMap(hp.itemId)) {
+              tx = hp.x; ty = hp.y; tw = hp.w; th = hp.h;
+            }
+          }
+
+          const startPt = gridToScreenIso(ra.x + 0.5, ra.y + 0.5);
+          const cornerPt = gridToScreenIso(tx + 0.5, ra.y + 0.5);
+          const endPt = gridToScreenIso(tx + 0.5, ty + 0.5);
+
+          // Линии по сетке X и Y
+          ctx.setLineDash([6, 4]);
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(startPt.x, startPt.y);
+          ctx.lineTo(cornerPt.x, cornerPt.y);
+          ctx.lineTo(endPt.x, endPt.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          const dx = tx - ra.x;
+          const dy = ty - ra.y;
+
+          // Считаем чистый зазор в пустых клетках между краями объектов
+          let gapX = 0;
+          if (tx >= ra.x + ra.w) gapX = tx - (ra.x + ra.w);
+          else if (tx + tw <= ra.x) gapX = ra.x - (tx + tw);
+
+          let gapY = 0;
+          if (ty >= ra.y + ra.h) gapY = ty - (ra.y + ra.h);
+          else if (ty + th <= ra.y) gapY = ra.y - (ty + th);
+
+          const dxStr = dx >= 0 ? `+${dx}` : `${dx}`;
+          const dyStr = dy >= 0 ? `+${dy}` : `${dy}`;
+          const label = `ΔX: ${dxStr}, ΔY: ${dyStr}  |  Зазор: ${gapX}×${gapY} кл.`;
+
+          const cursorTop = gridToScreenIso(pointer.gridX, pointer.gridY);
+          const boxCenterX = cursorTop.x;
+          const boxTopY = cursorTop.y - 68;
+
+          ctx.font = 'bold 12px JetBrains Mono, monospace';
+          const twText = ctx.measureText(label).width;
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 1.8;
+          ctx.fillRect(boxCenterX - twText / 2 - 10, boxTopY, twText + 20, 24);
+          ctx.strokeRect(boxCenterX - twText / 2 - 10, boxTopY, twText + 20, 24);
+          ctx.fillStyle = '#fde047';
+          ctx.fillText(label, boxCenterX, boxTopY + 16);
+        }
+        ctx.restore();
+      }
+
       if (pointer.gridX !== null && pointer.gridY !== null && state.tool !== 'pan') {
         let previewItem = ITEM_BY_ID[state.selectedItemId];
         let gx = pointer.gridX;
@@ -1296,7 +1613,7 @@ if (g.variant === 'single') {
           gh = pointer.movingPlacement.h;
         }
 
-        if (previewItem && state.tool !== 'area_move') {
+        if (previewItem && !['area_move', 'isolate', 'foreman', 'ruler'].includes(state.tool)) {
           ctx.strokeStyle = state.tool === 'delete_type' ? 'rgba(244, 63, 94, 0.95)' : 'rgba(56, 189, 248, 0.95)';
           ctx.lineWidth = 2;
           ctx.beginPath();
@@ -1579,6 +1896,20 @@ if (g.variant === 'single') {
         return;
       }
 
+      // 4. В режиме «Прораб» при зажатой ЛКМ отмечаем галочками линию построек/дорог
+      if (pointer.isDown && state.tool === 'foreman' && pointer.gridX !== null && pointer.foremanTargetState !== null) {
+        const uid = state.grid[pointer.gridY][pointer.gridX];
+        if (uid !== 0) {
+          const p = state.placements.get(uid);
+          if (p && isItemVisibleOnMap(p.itemId) && !!p.built !== pointer.foremanTargetState) {
+            p.built = pointer.foremanTargetState;
+            updateSpecialModeBanner();
+          }
+        }
+        requestRender();
+        return;
+      }
+
       requestRender();
     });
 
@@ -1599,6 +1930,60 @@ if (g.variant === 'single') {
         const clickedUid = state.grid[pointer.gridY][pointer.gridX];
         const clickedPlacement = clickedUid !== 0 ? state.placements.get(clickedUid) : null;
         const clickedItem = clickedPlacement ? ITEM_BY_ID[clickedPlacement.itemId] : null;
+
+        // 0-A. Режим «Изоляция»: клик по постройке на карте оставляет только этот тип
+        if (state.tool === 'isolate') {
+          if (clickedPlacement) {
+            state.isolatedItemId = clickedPlacement.itemId;
+            selectItem(clickedPlacement.itemId);
+            updateSpecialModeBanner();
+            requestRender();
+            showToast(`Изолировано: «${clickedItem.name}» (${state.counts[clickedItem.id] || 0} шт.)`);
+          } else {
+            showToast("Кликните на любую постройку на карте или выберите её в левом каталоге");
+          }
+          return;
+        }
+
+        // 0-B. Режим «Прораб»: клик ставит или снимает зелёную галочку ✓
+        if (state.tool === 'foreman') {
+          if (clickedPlacement && isItemVisibleOnMap(clickedPlacement.itemId)) {
+            clickedPlacement.built = !clickedPlacement.built;
+            pointer.foremanTargetState = clickedPlacement.built;
+            updateSpecialModeBanner();
+            requestRender();
+          } else {
+            pointer.foremanTargetState = null;
+            showToast("Кликните по постройке, чтобы отметить её как перенесённую в игру ✓");
+          }
+          return;
+        }
+
+        // 0-C. Режим «Рулетка»: клик задаёт опорную точку для отсчёта координат
+        if (state.tool === 'ruler') {
+          if (clickedPlacement && isItemVisibleOnMap(clickedPlacement.itemId)) {
+            state.rulerAnchor = {
+              x: clickedPlacement.x,
+              y: clickedPlacement.y,
+              w: clickedPlacement.w,
+              h: clickedPlacement.h,
+              name: clickedItem.name
+            };
+            showToast(`Опора: «${clickedItem.name}» [X:${clickedPlacement.x}, Y:${clickedPlacement.y}]`);
+          } else {
+            state.rulerAnchor = {
+              x: pointer.gridX,
+              y: pointer.gridY,
+              w: 1,
+              h: 1,
+              name: `Клетка ${pointer.gridX}:${pointer.gridY}`
+            };
+            showToast(`Опора: Клетка [X:${pointer.gridX}, Y:${pointer.gridY}]`);
+          }
+          updateSpecialModeBanner();
+          requestRender();
+          return;
+        }
 
         // 1. Явный инструмент «Двигать» ИЛИ клик в режиме «Строить» по уже установленному зданию/декору:
         // Сразу подхватываем существующую постройку для перетаскивания!
@@ -2076,6 +2461,11 @@ if (g.variant === 'single') {
       pointer.dragStartGrid = null;
     });
 
+    // Запрещаем стандартное контекстное меню браузера при перетаскивании ПКМ
+    canvas.addEventListener('contextmenu', e => {
+      e.preventDefault();
+    });
+
     canvas.addEventListener('wheel', e => {
   e.preventDefault();
   const zoomFactor = e.deltaY < 0 ? 1.15 : 0.85;
@@ -2096,7 +2486,165 @@ if (g.variant === 'single') {
   requestRender();
 }, { passive: false });
 
-function setTool(t) {
+function toggleIsolationMode() {
+      if (state.tool === 'isolate' || state.isolatedItemId !== null) {
+        clearIsolationMode();
+      } else {
+        setTool('isolate');
+        showToast("Режим Изоляции: кликните на любой объект на карте или в каталоге слева!");
+      }
+    }
+
+    function clearIsolationMode() {
+      state.isolatedItemId = null;
+      if (state.tool === 'isolate') {
+        state.tool = 'brush';
+      }
+      document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById(`tool-${state.tool}`);
+      if (activeBtn) activeBtn.classList.add('active');
+      updateSpecialModeBanner();
+      requestRender();
+      showToast("Изоляция отключена — показаны все объекты");
+    }
+
+    function toggleLayer(layerKey) {
+      state.layers[layerKey] = !state.layers[layerKey];
+      updateLayerButtonsUI();
+      updateSpecialModeBanner();
+      requestRender();
+    }
+
+    function setAllLayers(val) {
+      state.layers.buildings = val;
+      state.layers.roads = val;
+      state.layers.water = val;
+      state.layers.fences = val;
+      state.layers.flora = val;
+      state.layers.decor = val;
+      state.layers.forest = val;
+      if (val && state.isolatedItemId !== null) {
+        state.isolatedItemId = null;
+      }
+      updateLayerButtonsUI();
+      updateSpecialModeBanner();
+      requestRender();
+    }
+
+    function updateLayerButtonsUI() {
+      const cfg = [
+        { key: 'buildings', id: 'layer-btn-buildings', onClass: 'bg-amber-500/20 border-amber-500/40 text-amber-300' },
+        { key: 'roads', id: 'layer-btn-roads', onClass: 'bg-slate-400/20 border-slate-400/40 text-slate-200' },
+        { key: 'water', id: 'layer-btn-water', onClass: 'bg-sky-500/20 border-sky-500/40 text-sky-300' },
+        { key: 'fences', id: 'layer-btn-fences', onClass: 'bg-orange-500/20 border-orange-500/40 text-orange-300' },
+        { key: 'flora', id: 'layer-btn-flora', onClass: 'bg-pink-500/20 border-pink-500/40 text-pink-300' },
+        { key: 'decor', id: 'layer-btn-decor', onClass: 'bg-purple-500/20 border-purple-500/40 text-purple-300' },
+        { key: 'forest', id: 'layer-btn-forest', onClass: 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' }
+      ];
+      cfg.forEach(({ key, id, onClass }) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        const active = state.layers[key];
+        btn.className = `px-2 py-0.5 rounded-lg border font-semibold text-[11px] transition flex items-center gap-1 ${
+          active ? onClass : 'bg-slate-900 border-slate-800 text-slate-500 opacity-60'
+        }`;
+      });
+    }
+
+    function markVisibleBuilt(flag) {
+      for (const p of state.placements.values()) {
+        if (isItemVisibleOnMap(p.itemId)) {
+          p.built = flag;
+        }
+      }
+      updateSpecialModeBanner();
+      requestRender();
+      showToast(flag ? "Все видимые постройки отмечены ✓" : "Отметки с видимых построек сняты");
+    }
+
+    function resetAllBuiltMarks() {
+      for (const p of state.placements.values()) {
+        p.built = false;
+      }
+      updateSpecialModeBanner();
+      requestRender();
+      showToast("Все отметки Прораба сброшены");
+    }
+
+    function updateSpecialModeBanner() {
+      const banner = document.getElementById('specialModeBanner');
+      if (!banner) return;
+
+      const isoBtn = document.getElementById('tool-isolate');
+      if (isoBtn) {
+        isoBtn.classList.toggle('active', state.tool === 'isolate' || state.isolatedItemId !== null);
+      }
+
+      if (state.isolatedItemId !== null || state.tool === 'isolate') {
+        const it = state.isolatedItemId ? ITEM_BY_ID[state.isolatedItemId] : null;
+        let total = 0, built = 0;
+        if (it) {
+          for (const p of state.placements.values()) {
+            if (p.itemId === it.id) {
+              total++;
+              if (p.built) built++;
+            }
+          }
+        }
+        banner.classList.remove('hidden');
+        banner.innerHTML = it
+          ? `
+            <span class="text-cyan-300 font-bold"><i class="fa-solid fa-eye mr-1"></i>Изоляция: «${it.name}»</span>
+            <span class="text-slate-300 font-mono">На карте: <b>${total}</b> шт. (Отмечено ✓: <b class="text-emerald-400">${built}/${total}</b>)</span>
+            <button onclick="setTool('foreman')" class="px-2 py-0.5 rounded bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-200 font-semibold transition">Отмечать ✓</button>
+            <button onclick="clearIsolationMode()" class="px-2.5 py-0.5 rounded bg-rose-600 hover:bg-rose-500 text-white font-bold transition">Вернуть всё (Esc)</button>
+          `
+          : `
+            <span class="text-cyan-300 font-bold"><i class="fa-solid fa-eye mr-1"></i>Режим Изоляции:</span>
+            <span class="text-slate-200">Кликните по любой постройке на карте или выберите элемент в каталоге слева</span>
+            <button onclick="clearIsolationMode()" class="px-2.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold transition">Отмена (Esc)</button>
+          `;
+        return;
+      }
+
+      if (state.tool === 'foreman') {
+        let visTotal = 0, visBuilt = 0, allTotal = 0, allBuilt = 0;
+        for (const p of state.placements.values()) {
+          allTotal++;
+          if (p.built) allBuilt++;
+          if (isItemVisibleOnMap(p.itemId)) {
+            visTotal++;
+            if (p.built) visBuilt++;
+          }
+        }
+        banner.classList.remove('hidden');
+        banner.innerHTML = `
+          <span class="text-emerald-400 font-bold"><i class="fa-solid fa-clipboard-check mr-1"></i>Режим Прораба:</span>
+          <span class="text-slate-200 font-mono">Видимые: <b class="text-emerald-300">${visBuilt} / ${visTotal}</b> • Всего: <b>${allBuilt} / ${allTotal}</b></span>
+          <button onclick="markVisibleBuilt(true)" class="px-2 py-0.5 rounded bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-200 font-semibold transition">Отметить видимые ✓</button>
+          <button onclick="markVisibleBuilt(false)" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Снять видимые</button>
+          <button onclick="resetAllBuiltMarks()" class="px-2 py-0.5 rounded bg-rose-950/60 hover:bg-rose-900 border border-rose-500/30 text-rose-200 transition">Сбросить всё</button>
+        `;
+        return;
+      }
+
+      if (state.tool === 'ruler') {
+        banner.classList.remove('hidden');
+        const anchorText = state.rulerAnchor
+          ? `Опора: <b class="text-amber-300">${state.rulerAnchor.name} [${state.rulerAnchor.x}:${state.rulerAnchor.y}]</b> — наведите курсор на цель`
+          : `Кликните ЛКМ на опорное здание (например, Дерево жизни), чтобы отсчитывать от него клетки`;
+        banner.innerHTML = `
+          <span class="text-amber-400 font-bold"><i class="fa-solid fa-ruler-combined mr-1"></i>Рулетка:</span>
+          <span class="text-slate-200">${anchorText}</span>
+          ${state.rulerAnchor ? `<button onclick="state.rulerAnchor=null;updateSpecialModeBanner();requestRender();" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Сбросить опору</button>` : ''}
+        `;
+        return;
+      }
+
+      banner.classList.add('hidden');
+    }
+
+    function setTool(t) {
       state.tool = t;
       document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
       const btn = document.getElementById(`tool-${t}`);
@@ -2109,9 +2657,15 @@ function setTool(t) {
         showToast("Кликните ЛКМ на пустую клетку внутри замкнутого контура для посадки леса");
       } else if (t === 'forest_clear_area') {
         showToast("Кликните ЛКМ на дерево или внутрь зоны, чтобы срубить лес в замкнутой области");
+      } else if (t === 'foreman') {
+        showToast("Режим Прораба: кликайте ЛКМ по постройкам, которые уже перенесли в игру ✓");
+      } else if (t === 'ruler') {
+        showToast("Рулетка: кликните ЛКМ на опорную постройку для замера расстояния и зазора");
       }
       pointer.areaSelection = null;
       pointer.areaDragging = null;
+      updateSpecialModeBanner();
+      requestRender();
     }
 
     function setSymmetry(s) {
@@ -2123,11 +2677,67 @@ function setTool(t) {
 
     function selectItem(id) {
       state.selectedItemId = id;
+      if (state.tool === 'isolate' || state.isolatedItemId !== null) {
+        state.isolatedItemId = id;
+        updateSpecialModeBanner();
+        requestRender();
+      }
       refreshActiveBanner();
       document.querySelectorAll('.catalog-card').forEach(c => c.classList.remove('selected'));
       const card = document.getElementById(`catalog-card-${id}`);
       if (card) card.classList.add('selected');
     }
+
+    window.addEventListener('keydown', e => {
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) return;
+
+      // Отмена / Повтор (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z) — работает на любой раскладке
+      if (e.ctrlKey || e.metaKey) {
+        if (e.code === 'KeyZ' && !e.shiftKey) {
+          e.preventDefault();
+          undo();
+          return;
+        }
+        if (e.code === 'KeyY' || (e.code === 'KeyZ' && e.shiftKey)) {
+          e.preventDefault();
+          redo();
+          return;
+        }
+        return;
+      }
+
+      if (e.altKey) return;
+
+      if (e.key === 'Escape') {
+        if (state.isolatedItemId !== null || state.tool === 'isolate') {
+          clearIsolationMode();
+        } else if (state.rulerAnchor) {
+          state.rulerAnchor = null;
+          updateSpecialModeBanner();
+          requestRender();
+        } else {
+          setTool('brush');
+        }
+        return;
+      }
+
+      // Горячие клавиши инструментов (по физическому коду клавиши, работают и на русской, и на английской раскладке)
+      switch (e.code) {
+        case 'KeyI': toggleIsolationMode(); break;
+        case 'KeyP': setTool('foreman'); break;
+        case 'KeyK': setTool('ruler'); break;
+        case 'KeyB': setTool('brush'); break;
+        case 'KeyR': setTool('rect'); break;
+        case 'KeyF': setTool('frame'); break;
+        case 'KeyL': setTool('line'); break;
+        case 'KeyM': setTool('move'); break;
+        case 'KeyV': setTool('area_move'); break;
+        case 'KeyT':
+        case 'Delete': setTool('delete_type'); break;
+        case 'KeyE': setTool('erase'); break;
+        case 'KeyG': setTool('fill'); break;
+      }
+    });
 
     function setCatalogFilter(f) {
       state.catalogFilter = f;

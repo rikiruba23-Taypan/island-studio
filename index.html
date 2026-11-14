@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Остров Рассвета — Архитектор Города V10 (Whiteout Survival)</title>
+  <title>Остров Рассвета — Архитектор Города V0.9 (Белая мгла. Выживание)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -65,11 +65,6 @@
       border-color: #60a5fa;
       box-shadow: 0 0 15px rgba(37, 99, 235, 0.45);
     }
-    .view-btn.active {
-      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-      color: #ffffff;
-      border-color: #7dd3fc;
-    }
     .sym-btn.active {
       background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
       color: #ffffff;
@@ -100,7 +95,7 @@
             <h1 class="font-bold text-sm tracking-tight text-white">ОСТРОВ РАССВЕТА</h1>
             <span class="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30 font-semibold">Студия V1</span>
           </div>
-          <p class="text-[11px] text-slate-400 leading-none mt-0.5">Сетка 60×60 • Изометрия & Чертёж</p>
+          <p class="text-[11px] text-slate-400 leading-none mt-0.5">Сетка 60×60 • Изометрический Планировщик</p>
         </div>
       </div>
 
@@ -192,14 +187,6 @@
         <button onclick="setSymmetry('quad')" id="sym-quad" class="sym-btn px-2 py-1 rounded text-[11px] font-semibold text-slate-300 border border-transparent" title="4 квадранта">4×Квадр</button>
       </div>
 
-      <div class="flex items-center bg-slate-900 p-0.5 rounded-lg border border-slate-800">
-        <button onclick="undo()" id="undoBtn" title="Отменить (Ctrl+Z)" class="px-2 py-1 text-xs text-slate-300 hover:text-white disabled:opacity-30 transition">
-          <i class="fa-solid fa-rotate-left"></i>
-        </button>
-        <button onclick="redo()" id="redoBtn" title="Повторить (Ctrl+Y)" class="px-2 py-1 text-xs text-slate-300 hover:text-white disabled:opacity-30 transition">
-          <i class="fa-solid fa-rotate-right"></i>
-        </button>
-      </div>
     </div>
 
     <div class="flex items-center gap-2">
@@ -226,7 +213,7 @@
   <div class="flex-1 flex overflow-hidden relative">
 
     <!-- LEFT SIDEBAR: CATALOG -->
-    <aside class="w-80 bg-slate-925 border-r border-slate-800 flex flex-col shrink-0 z-20">
+    <aside id="leftSidebar" class="w-80 bg-slate-925 border-r border-slate-800 flex flex-col shrink-0 z-20 transition-all duration-200">
       <div id="activeItemBanner" class="p-3 bg-slate-900/90 border-b border-slate-800"></div>
 
       <div class="p-2.5 border-b border-slate-800 space-y-2 bg-slate-925">
@@ -261,14 +248,34 @@
     <main class="flex-1 relative bg-slate-950 overflow-hidden flex flex-col">
       <div class="absolute top-3 left-3 right-3 flex flex-col gap-2 pointer-events-none z-10">
         <div class="flex flex-wrap items-center justify-between gap-2">
-          <!-- Координаты и инфо о клетке -->
-          <div class="glass-panel px-3 py-1.5 rounded-xl flex items-center gap-3 pointer-events-auto shadow-lg">
-            <div class="flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
-              <span class="text-xs font-mono font-bold text-sky-300" id="hudCoords">X: --, Y: --</span>
+          <!-- Левая группа: Скрытие левого меню + Координаты + Отменить/Повторить -->
+          <div class="flex items-center gap-2 pointer-events-auto">
+            <button onclick="toggleLeftSidebar()" id="toggleLeftSidebarBtn" title="Скрыть/показать левый каталог (Клавиша [)" class="glass-panel w-8 h-8 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:border-sky-500/50 shadow-lg transition">
+              <i class="fa-solid fa-angles-left text-xs" id="toggleLeftSidebarIcon"></i>
+            </button>
+
+            <!-- Координаты и инфо о клетке -->
+            <div class="glass-panel px-3 py-1.5 rounded-xl flex items-center gap-3 shadow-lg">
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+                <span class="text-xs font-mono font-bold text-sky-300" id="hudCoords">X: --, Y: --</span>
+              </div>
+              <div class="h-3.5 w-px bg-slate-700"></div>
+              <div class="text-xs text-slate-300 truncate max-w-[240px]" id="hudCellInfo">Наведите курсор на сетку острова</div>
             </div>
-            <div class="h-3.5 w-px bg-slate-700"></div>
-            <div class="text-xs text-slate-300 truncate max-w-[260px]" id="hudCellInfo">Наведите курсор на сетку острова</div>
+
+            <!-- Кнопки Отменить и Повторить (между координатами и слоями) -->
+            <div class="glass-panel p-1 rounded-xl flex items-center gap-0.5 shadow-lg">
+              <button onclick="undo()" id="undoBtn" title="Отменить действие (Ctrl+Z)" class="px-2.5 py-1 rounded-lg hover:bg-slate-800 text-xs font-medium text-slate-200 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition flex items-center gap-1">
+                <i class="fa-solid fa-rotate-left text-sky-400"></i>
+                <span class="hidden 2xl:inline text-[11px]">Отменить</span>
+              </button>
+              <div class="h-3.5 w-px bg-slate-700/80"></div>
+              <button onclick="redo()" id="redoBtn" title="Повторить действие (Ctrl+Y)" class="px-2.5 py-1 rounded-lg hover:bg-slate-800 text-xs font-medium text-slate-200 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition flex items-center gap-1">
+                <i class="fa-solid fa-rotate-right text-sky-400"></i>
+                <span class="hidden 2xl:inline text-[11px]">Повторить</span>
+              </button>
+            </div>
           </div>
 
           <!-- Поэтапный мастер сборки (Детальные слои по категориям) -->
@@ -300,28 +307,34 @@
             <button onclick="setAllLayers(false)" title="Скрыть все слои (чтобы включить только нужные)" class="px-1.5 py-0.5 rounded hover:bg-slate-800 text-[10px] text-slate-400 hover:text-white transition">Скрыть</button>
           </div>
 
-          <!-- Чекбоксы отображения -->
-          <div class="glass-panel px-2.5 py-1 rounded-xl flex items-center gap-2 pointer-events-auto shadow-lg text-xs">
-            <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
-              <input type="checkbox" id="showGridCheck" checked onchange="requestRender()" class="accent-sky-500 rounded" />
-              <span>Сетка</span>
-            </label>
-            <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
-              <input type="checkbox" id="showAxesCheck" checked onchange="requestRender()" class="accent-purple-500 rounded" />
-              <span>Оси</span>
-            </label>
-            <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
-              <input type="checkbox" id="showLabelsCheck" checked onchange="requestRender()" class="accent-amber-500 rounded" />
-              <span>Подписи</span>
-            </label>
-            <label class="flex items-center gap-1 cursor-pointer text-emerald-300 hover:text-emerald-200" title="Отображать зелёные галочки Прораба на карте">
-              <input type="checkbox" id="showBuiltMarksCheck" checked onchange="requestRender()" class="accent-emerald-500 rounded" />
-              <span>Отметки ✓</span>
-            </label>
-            <label class="flex items-center gap-1 cursor-pointer text-amber-300 hover:text-amber-200">
-              <input type="checkbox" id="showReservesCheck" checked onchange="requestRender()" class="accent-amber-500 rounded" />
-              <span>Резервы 3×3</span>
-            </label>
+          <!-- Правая группа: Чекбоксы отображения + Скрытие правого меню -->
+          <div class="flex items-center gap-2 pointer-events-auto">
+            <div class="glass-panel px-2.5 py-1.5 rounded-xl flex items-center gap-2 shadow-lg text-xs">
+              <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
+                <input type="checkbox" id="showGridCheck" checked onchange="requestRender()" class="accent-sky-500 rounded" />
+                <span>Сетка</span>
+              </label>
+              <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
+                <input type="checkbox" id="showAxesCheck" checked onchange="requestRender()" class="accent-purple-500 rounded" />
+                <span>Оси</span>
+              </label>
+              <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
+                <input type="checkbox" id="showLabelsCheck" checked onchange="requestRender()" class="accent-amber-500 rounded" />
+                <span>Подписи</span>
+              </label>
+              <label class="flex items-center gap-1 cursor-pointer text-emerald-300 hover:text-emerald-200" title="Отображать зелёные галочки Прораба на карте">
+                <input type="checkbox" id="showBuiltMarksCheck" checked onchange="requestRender()" class="accent-emerald-500 rounded" />
+                <span>Отметки ✓</span>
+              </label>
+              <label class="flex items-center gap-1 cursor-pointer text-amber-300 hover:text-amber-200">
+                <input type="checkbox" id="showReservesCheck" checked onchange="requestRender()" class="accent-amber-500 rounded" />
+                <span>Резервы 3×3</span>
+              </label>
+            </div>
+
+            <button onclick="toggleRightSidebar()" id="toggleRightSidebarBtn" title="Скрыть/показать правую панель статистики (Клавиша ])" class="glass-panel w-8 h-8 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:border-sky-500/50 shadow-lg transition">
+              <i class="fa-solid fa-angles-right text-xs" id="toggleRightSidebarIcon"></i>
+            </button>
           </div>
         </div>
 
@@ -386,7 +399,7 @@
     </main>
 
     <!-- RIGHT SIDEBAR -->
-    <aside class="w-80 bg-slate-925 border-l border-slate-800 flex flex-col shrink-0 z-20">
+    <aside id="rightSidebar" class="w-80 bg-slate-925 border-l border-slate-800 flex flex-col shrink-0 z-20 transition-all duration-200">
       <div class="p-3 border-b border-slate-800 space-y-2.5">
         <div class="flex items-center justify-between">
           <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Статистика Острова</span>
@@ -658,12 +671,14 @@ CATALOG.forEach(it => {
     const ISO_DX = 31;
     const ISO_DY = 21.92;
     
+    let isInitializing = true;
+
     let state = {
       projectName: "Северная Гавань V10",
-      viewMode: 'iso',
       tool: 'brush',
       symmetry: 'none',
       selectedItemId: 1,
+      isRotated: false,
       catalogFilter: 'all',
       onlyAvailable: false,
       catalogSearch: '',
@@ -675,8 +690,28 @@ CATALOG.forEach(it => {
       reserves: [],
       layers: { buildings: true, roads: true, water: true, fences: true, flora: true, decor: true, forest: true },
       isolatedItemId: null,
+      pinnedLineCell: null,
       rulerAnchor: null
     };
+
+    function isItemRotatable(item) {
+      return !!(item && (item.rotatable || item.w !== item.h));
+    }
+
+    function getEffectiveDims(item) {
+      if (!item) return { w: 1, h: 1 };
+      if (isItemRotatable(item) && state.isRotated) {
+        return { w: item.h, h: item.w };
+      }
+      return { w: item.w, h: item.h };
+    }
+
+    function saveAutosaveDraft() {
+      if (isInitializing) return;
+      try {
+        localStorage.setItem('island_autosave_draft', JSON.stringify(cloneSnapshot()));
+      } catch (e) {}
+    }
 
     CATALOG.forEach(it => state.counts[it.id] = 0);
 
@@ -1174,11 +1209,7 @@ function resizeCanvas() {
       const showLabels = document.getElementById('showLabelsCheck').checked;
       const showReserves = document.getElementById('showReservesCheck').checked;
 
-if (state.viewMode === 'iso') {
-        renderIsoIsland(showGrid, showAxes, showLabels, showReserves);
-      } else {
-        render2dIsland(showGrid, showAxes, showLabels, showReserves);
-      }
+      renderIsoIsland(showGrid, showAxes, showLabels, showReserves);
 
       ctx.restore();
     }
@@ -1189,7 +1220,152 @@ if (state.viewMode === 'iso') {
       return { x: sx, y: sy };
     }
 
-    const CELL_2D = 22;
+    // Авто-подсчёт прямых линий (от 3 клеток) для дорог, заборов, воды и клумб в режимах Изоляции и Прораба
+    function computeStraightLineRuns() {
+      const runs = [];
+      const isEligibleCell = (x, y) => {
+        const uid = state.grid[y]?.[x];
+        if (!uid) return null;
+        const p = state.placements.get(uid);
+        if (!p || p.w !== 1 || p.h !== 1) return null;
+        if (!isItemVisibleOnMap(p.itemId)) return null;
+        const item = ITEM_BY_ID[p.itemId];
+        if (!item) return null;
+        // В режиме изоляции считаем линии для любого 1x1 объекта, а в режиме Прораба — для категории «Дороги» (дорожки, заборы, вода, цветы)
+        if (state.isolatedItemId === null && item.type !== 'Дороги') return null;
+        return p;
+      };
+
+      // 1. Горизонтальные линии вдоль оси X (фиксированный Y)
+      for (let y = 1; y <= GRID_SIZE; y++) {
+        let x = 1;
+        while (x <= GRID_SIZE) {
+          const pStart = isEligibleCell(x, y);
+          if (!pStart) { x++; continue; }
+          const itemId = pStart.itemId;
+          let xEnd = x;
+          let builtCount = pStart.built ? 1 : 0;
+          while (xEnd + 1 <= GRID_SIZE) {
+            const pNext = isEligibleCell(xEnd + 1, y);
+            if (!pNext || pNext.itemId !== itemId) break;
+            xEnd++;
+            if (pNext.built) builtCount++;
+          }
+          const len = xEnd - x + 1;
+          if (len >= 3) {
+            runs.push({
+              axis: 'X',
+              itemId,
+              x1: x, y1: y,
+              x2: xEnd, y2: y,
+              len,
+              allBuilt: builtCount === len,
+              builtCount
+            });
+          }
+          x = xEnd + 1;
+        }
+      }
+
+      // 2. Вертикальные линии вдоль оси Y (фиксированный X)
+      for (let x = 1; x <= GRID_SIZE; x++) {
+        let y = 1;
+        while (y <= GRID_SIZE) {
+          const pStart = isEligibleCell(x, y);
+          if (!pStart) { y++; continue; }
+          const itemId = pStart.itemId;
+          let yEnd = y;
+          let builtCount = pStart.built ? 1 : 0;
+          while (yEnd + 1 <= GRID_SIZE) {
+            const pNext = isEligibleCell(x, yEnd + 1);
+            if (!pNext || pNext.itemId !== itemId) break;
+            yEnd++;
+            if (pNext.built) builtCount++;
+          }
+          const len = yEnd - y + 1;
+          if (len >= 3) {
+            runs.push({
+              axis: 'Y',
+              itemId,
+              x1: x, y1: y,
+              x2: x, y2: yEnd,
+              len,
+              allBuilt: builtCount === len,
+              builtCount
+            });
+          }
+          y = yEnd + 1;
+        }
+      }
+
+      return runs;
+    }
+
+    // Подсчёт длины непрерывной линии по X и Y, проходящей через конкретную клетку (gx, gy)
+    function getLineStatsAtCell(gx, gy) {
+      if (!isInsideGrid(gx, gy)) return null;
+      const uid = state.grid[gy][gx];
+      if (!uid) return null;
+      const p = state.placements.get(uid);
+      if (!p || p.w !== 1 || p.h !== 1) return null;
+      if (!isItemVisibleOnMap(p.itemId)) return null;
+      const itemId = p.itemId;
+
+      let x1 = gx, x2 = gx;
+      while (x1 > 1) {
+        const u = state.grid[gy][x1 - 1];
+        const pl = u ? state.placements.get(u) : null;
+        if (pl && pl.itemId === itemId && pl.w === 1 && pl.h === 1) x1--;
+        else break;
+      }
+      while (x2 < GRID_SIZE) {
+        const u = state.grid[gy][x2 + 1];
+        const pl = u ? state.placements.get(u) : null;
+        if (pl && pl.itemId === itemId && pl.w === 1 && pl.h === 1) x2++;
+        else break;
+      }
+
+      let y1 = gy, y2 = gy;
+      while (y1 > 1) {
+        const u = state.grid[y1 - 1][gx];
+        const pl = u ? state.placements.get(u) : null;
+        if (pl && pl.itemId === itemId && pl.w === 1 && pl.h === 1) y1--;
+        else break;
+      }
+      while (y2 < GRID_SIZE) {
+        const u = state.grid[y2 + 1][gx];
+        const pl = u ? state.placements.get(u) : null;
+        if (pl && pl.itemId === itemId && pl.w === 1 && pl.h === 1) y2++;
+        else break;
+      }
+
+      return {
+        gx, gy, itemId,
+        lenX: x2 - x1 + 1, x1, x2,
+        lenY: y2 - y1 + 1, y1, y2
+      };
+    }
+
+    // Вспомогательная функция отрисовки контрастного текстового бейджа на холсте
+    function drawContrastBadge(ctx, text, x, y, borderColor = '#38bdf8', textColor = '#ffffff', font = 'bold 11px JetBrains Mono, monospace', bgAlpha = 0.94) {
+      ctx.save();
+      ctx.font = font;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const padX = 12;
+      const bh = 22;
+      const bw = ctx.measureText(text).width + padX;
+
+      ctx.fillStyle = `rgba(6, 10, 18, ${bgAlpha})`;
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = 1.8;
+      ctx.fillRect(x - bw / 2, y - bh / 2, bw, bh);
+      ctx.strokeRect(x - bw / 2, y - bh / 2, bw, bh);
+
+      ctx.fillStyle = textColor;
+      ctx.fillText(text, x, y + 0.5);
+      ctx.restore();
+    }
 
     function renderIsoIsland(showGrid, showAxes, showLabels, showReserves) {
       const showBuiltMarks = document.getElementById('showBuiltMarksCheck')?.checked ?? true;
@@ -1316,7 +1492,16 @@ if (state.viewMode === 'iso') {
             const centerX = (topPos.x + bottomPos.x) / 2;
             const drawX = centerX - drawW / 2;
             const drawY = bottomPos.y - drawH;
-            ctx.drawImage(textureImg, drawX, drawY, drawW, drawH);
+            const isPlacedRotated = (p.w === item.h && p.h === item.w && item.w !== item.h);
+            if (isPlacedRotated) {
+              ctx.save();
+              ctx.translate(centerX, 0);
+              ctx.scale(-1, 1);
+              ctx.drawImage(textureImg, -drawW / 2, drawY, drawW, drawH);
+              ctx.restore();
+            } else {
+              ctx.drawImage(textureImg, drawX, drawY, drawW, drawH);
+            }
           } else {
             ctx.fillStyle = item.color || '#38bdf8';
             ctx.beginPath();
@@ -1435,9 +1620,9 @@ if (state.viewMode === 'iso') {
               const midX = (cTop.x + cBottom.x) / 2;
               const midY = (cTop.y + cBottom.y) / 2;
 
-              if (isIsolated) {
+              if (isIsolated && !(showBuiltMarks && p.built)) {
                 ctx.save();
-                ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)';
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
                 ctx.lineWidth = 1.2;
                 ctx.beginPath();
                 ctx.moveTo(cTop.x, cTop.y);
@@ -1447,12 +1632,18 @@ if (state.viewMode === 'iso') {
                 ctx.closePath();
                 ctx.stroke();
 
-                ctx.fillStyle = '#fde047';
-                ctx.font = 'bold 9px JetBrains Mono, monospace';
-                ctx.textAlign = 'center';
-                ctx.shadowColor = '#000';
-                ctx.shadowBlur = 3;
-                ctx.fillText(`${cxCell}:${cyCell}`, midX, midY + 3);
+                // Рисуем координаты в тёмной контрастной капсуле при достаточном приближении
+                if (camera.zoom >= 0.65) {
+                  const coordLabel = `${cxCell}:${cyCell}`;
+                  ctx.font = 'bold 9px JetBrains Mono, monospace';
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'middle';
+                  const cw = ctx.measureText(coordLabel).width + 6;
+                  ctx.fillStyle = 'rgba(6, 10, 18, 0.84)';
+                  ctx.fillRect(midX - cw / 2, midY - 6, cw, 12);
+                  ctx.fillStyle = '#e2e8f0';
+                  ctx.fillText(coordLabel, midX, midY + 0.5);
+                }
                 ctx.restore();
               }
 
@@ -1508,7 +1699,129 @@ if (state.viewMode === 'iso') {
         ctx.setLineDash([]);
       }
 
-      // Отрисовка Рулетки (Опорная точка + Линии смещения по осям X и Y)
+      // 1. Умный замер прямых линий (X и Y) ТОЛЬКО для клетки под курсором или закреплённой клетки (без каши из подписей!)
+      let inspectCell = null;
+      if (state.pinnedLineCell && isInsideGrid(state.pinnedLineCell.x, state.pinnedLineCell.y)) {
+        inspectCell = state.pinnedLineCell;
+      } else if (pointer.gridX !== null && pointer.gridY !== null && (isIsolated || state.tool === 'foreman')) {
+        inspectCell = { x: pointer.gridX, y: pointer.gridY };
+      }
+
+      if (inspectCell && state.tool !== 'ruler') {
+        const ls = getLineStatsAtCell(inspectCell.x, inspectCell.y);
+        if (ls && (ls.lenX >= 2 || ls.lenY >= 2)) {
+          ctx.save();
+
+          // Подсветка коридора по оси X (Ярко-голубой неон с тёмной обводкой)
+          if (ls.lenX >= 2) {
+            const xTop = gridToScreenIso(ls.x1, ls.gy);
+            const xRight = gridToScreenIso(ls.x2 + 1, ls.gy);
+            const xBottom = gridToScreenIso(ls.x2 + 1, ls.gy + 1);
+            const xLeft = gridToScreenIso(ls.x1, ls.gy + 1);
+
+            ctx.fillStyle = 'rgba(6, 182, 212, 0.22)';
+            ctx.beginPath();
+            ctx.moveTo(xTop.x, xTop.y);
+            ctx.lineTo(xRight.x, xRight.y);
+            ctx.lineTo(xBottom.x, xBottom.y);
+            ctx.lineTo(xLeft.x, xLeft.y);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(6, 10, 18, 0.95)';
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 2.4;
+            ctx.stroke();
+
+            // Осевая линия X с точками на концах
+            const p1 = gridToScreenIso(ls.x1 + 0.5, ls.gy + 0.5);
+            const p2 = gridToScreenIso(ls.x2 + 0.5, ls.gy + 0.5);
+            ctx.strokeStyle = 'rgba(6, 10, 18, 0.95)';
+            ctx.lineWidth = 5;
+            ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 2.2;
+            ctx.beginPath(); ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+
+            const mx = (p1.x + p2.x) / 2;
+            const my = (p1.y + p2.y) / 2;
+            drawContrastBadge(
+              ctx,
+              `Ось X: ${ls.lenX} кл. [${ls.x1}..${ls.x2}]`,
+              mx,
+              my - 18,
+              '#00f0ff',
+              '#67e8f9'
+            );
+          }
+
+          // Подсветка коридора по оси Y (Ярко-малиновый неон с тёмной обводкой)
+          if (ls.lenY >= 2) {
+            const yTop = gridToScreenIso(ls.gx, ls.y1);
+            const yRight = gridToScreenIso(ls.gx + 1, ls.y1);
+            const yBottom = gridToScreenIso(ls.gx + 1, ls.y2 + 1);
+            const yLeft = gridToScreenIso(ls.gx, ls.y2 + 1);
+
+            ctx.fillStyle = 'rgba(244, 63, 94, 0.22)';
+            ctx.beginPath();
+            ctx.moveTo(yTop.x, yTop.y);
+            ctx.lineTo(yRight.x, yRight.y);
+            ctx.lineTo(yBottom.x, yBottom.y);
+            ctx.lineTo(yLeft.x, yLeft.y);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = 'rgba(6, 10, 18, 0.95)';
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            ctx.strokeStyle = '#ff2a85';
+            ctx.lineWidth = 2.4;
+            ctx.stroke();
+
+            // Осевая линия Y с точками на концах
+            const q1 = gridToScreenIso(ls.gx + 0.5, ls.y1 + 0.5);
+            const q2 = gridToScreenIso(ls.gx + 0.5, ls.y2 + 0.5);
+            ctx.strokeStyle = 'rgba(6, 10, 18, 0.95)';
+            ctx.lineWidth = 5;
+            ctx.beginPath(); ctx.moveTo(q1.x, q1.y); ctx.lineTo(q2.x, q2.y); ctx.stroke();
+            ctx.strokeStyle = '#ff2a85';
+            ctx.lineWidth = 2.2;
+            ctx.beginPath(); ctx.moveTo(q1.x, q1.y); ctx.lineTo(q2.x, q2.y); ctx.stroke();
+
+            const mx = (q1.x + q2.x) / 2;
+            const my = (q1.y + q2.y) / 2;
+            drawContrastBadge(
+              ctx,
+              `Ось Y: ${ls.lenY} кл. [${ls.y1}..${ls.y2}]`,
+              mx,
+              my + 18,
+              '#ff2a85',
+              '#fda4af'
+            );
+          }
+
+          // Выделяем саму опорную клетку пересечения
+          const cellTop = gridToScreenIso(ls.gx, ls.gy);
+          const cellRight = gridToScreenIso(ls.gx + 1, ls.gy);
+          const cellBottom = gridToScreenIso(ls.gx + 1, ls.gy + 1);
+          const cellLeft = gridToScreenIso(ls.gx, ls.gy + 1);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(cellTop.x, cellTop.y);
+          ctx.lineTo(cellRight.x, cellRight.y);
+          ctx.lineTo(cellBottom.x, cellBottom.y);
+          ctx.lineTo(cellLeft.x, cellLeft.y);
+          ctx.closePath();
+          ctx.stroke();
+
+          ctx.restore();
+        }
+      }
+
+      // 2. Отрисовка Рулетки (Супер-контрастные двойные линии: Чёрная подложка + Голубой по X и Малиновый по Y)
       if (state.rulerAnchor) {
         const ra = state.rulerAnchor;
         const aTop = gridToScreenIso(ra.x, ra.y);
@@ -1517,9 +1830,7 @@ if (state.viewMode === 'iso') {
         const aLeft = gridToScreenIso(ra.x, ra.y + ra.h);
 
         ctx.save();
-        ctx.fillStyle = 'rgba(245, 158, 11, 0.28)';
-        ctx.strokeStyle = '#f59e0b';
-        ctx.lineWidth = 2.5;
+        ctx.fillStyle = 'rgba(244, 63, 94, 0.28)';
         ctx.beginPath();
         ctx.moveTo(aTop.x, aTop.y);
         ctx.lineTo(aRight.x, aRight.y);
@@ -1527,16 +1838,18 @@ if (state.viewMode === 'iso') {
         ctx.lineTo(aLeft.x, aLeft.y);
         ctx.closePath();
         ctx.fill();
+
+        // Двойная контрастная рамка вокруг Опоры
+        ctx.strokeStyle = 'rgba(6, 10, 18, 0.95)';
+        ctx.lineWidth = 5.5;
+        ctx.stroke();
+        ctx.strokeStyle = '#ff2a85';
+        ctx.lineWidth = 2.8;
         ctx.stroke();
 
         const acx = (aTop.x + aBottom.x) / 2;
         const acy = (aTop.y + aBottom.y) / 2;
-        ctx.fillStyle = '#fbbf24';
-        ctx.font = 'bold 11px JetBrains Mono, monospace';
-        ctx.textAlign = 'center';
-        ctx.shadowColor = '#000';
-        ctx.shadowBlur = 4;
-        ctx.fillText(`⚓ ОПОРА [${ra.x}:${ra.y}]`, acx, acy - 10);
+        drawContrastBadge(ctx, `⚓ ОПОРА [${ra.x}:${ra.y}]`, acx, acy - 16, '#ff2a85', '#ffffff');
 
         if (pointer.gridX !== null && pointer.gridY !== null) {
           let tx = pointer.gridX;
@@ -1550,25 +1863,78 @@ if (state.viewMode === 'iso') {
             }
           }
 
+          // Обводим целевую постройку/клетку ярким контуром
+          const tTop = gridToScreenIso(tx, ty);
+          const tRight = gridToScreenIso(tx + tw, ty);
+          const tBottom = gridToScreenIso(tx + tw, ty + th);
+          const tLeft = gridToScreenIso(tx, ty + th);
+          ctx.beginPath();
+          ctx.moveTo(tTop.x, tTop.y);
+          ctx.lineTo(tRight.x, tRight.y);
+          ctx.lineTo(tBottom.x, tBottom.y);
+          ctx.lineTo(tLeft.x, tLeft.y);
+          ctx.closePath();
+          ctx.strokeStyle = 'rgba(6, 10, 18, 0.95)';
+          ctx.lineWidth = 5;
+          ctx.stroke();
+          ctx.strokeStyle = '#00f0ff';
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+
           const startPt = gridToScreenIso(ra.x + 0.5, ra.y + 0.5);
           const cornerPt = gridToScreenIso(tx + 0.5, ra.y + 0.5);
           const endPt = gridToScreenIso(tx + 0.5, ty + 0.5);
 
-          // Линии по сетке X и Y
-          ctx.setLineDash([6, 4]);
-          ctx.strokeStyle = '#38bdf8';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(startPt.x, startPt.y);
-          ctx.lineTo(cornerPt.x, cornerPt.y);
-          ctx.lineTo(endPt.x, endPt.y);
-          ctx.stroke();
-          ctx.setLineDash([]);
+          // Ось X: Тёмная подложка 6.5px + Ярко-голубая линия 3px
+          if (tx !== ra.x) {
+            ctx.strokeStyle = 'rgba(6, 10, 18, 0.95)';
+            ctx.lineWidth = 6.5;
+            ctx.beginPath();
+            ctx.moveTo(startPt.x, startPt.y);
+            ctx.lineTo(cornerPt.x, cornerPt.y);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(startPt.x, startPt.y);
+            ctx.lineTo(cornerPt.x, cornerPt.y);
+            ctx.stroke();
+          }
+
+          // Ось Y: Тёмная подложка 6.5px + Ярко-малиновая линия 3px
+          if (ty !== ra.y) {
+            ctx.strokeStyle = 'rgba(6, 10, 18, 0.95)';
+            ctx.lineWidth = 6.5;
+            ctx.beginPath();
+            ctx.moveTo(cornerPt.x, cornerPt.y);
+            ctx.lineTo(endPt.x, endPt.y);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#ff2a85';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(cornerPt.x, cornerPt.y);
+            ctx.lineTo(endPt.x, endPt.y);
+            ctx.stroke();
+          }
+
+          // Узловые точки на старте, повороте и финише рулетки
+          [
+            { pt: startPt, color: '#ff2a85' },
+            { pt: cornerPt, color: '#ffffff' },
+            { pt: endPt, color: '#00f0ff' }
+          ].forEach(({ pt, color }) => {
+            ctx.fillStyle = '#060a12';
+            ctx.beginPath(); ctx.arc(pt.x, pt.y, 6, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = color;
+            ctx.beginPath(); ctx.arc(pt.x, pt.y, 3.8, 0, Math.PI * 2); ctx.fill();
+          });
 
           const dx = tx - ra.x;
           const dy = ty - ra.y;
 
-          // Считаем чистый зазор в пустых клетках между краями объектов
+          // Чистый зазор в пустых клетках между краями объектов
           let gapX = 0;
           if (tx >= ra.x + ra.w) gapX = tx - (ra.x + ra.w);
           else if (tx + tw <= ra.x) gapX = ra.x - (tx + tw);
@@ -1579,31 +1945,51 @@ if (state.viewMode === 'iso') {
 
           const dxStr = dx >= 0 ? `+${dx}` : `${dx}`;
           const dyStr = dy >= 0 ? `+${dy}` : `${dy}`;
-          const label = `ΔX: ${dxStr}, ΔY: ${dyStr}  |  Зазор: ${gapX}×${gapY} кл.`;
 
+          // Подписи прямо на плечах X и Y, если они достаточно длинные
+          if (Math.abs(dx) >= 2) {
+            drawContrastBadge(
+              ctx,
+              `ΔX: ${dxStr} кл.`,
+              (startPt.x + cornerPt.x) / 2,
+              (startPt.y + cornerPt.y) / 2 - 14,
+              '#00f0ff',
+              '#67e8f9'
+            );
+          }
+          if (Math.abs(dy) >= 2) {
+            drawContrastBadge(
+              ctx,
+              `ΔY: ${dyStr} кл.`,
+              (cornerPt.x + endPt.x) / 2,
+              (cornerPt.y + endPt.y) / 2 + 14,
+              '#ff2a85',
+              '#fda4af'
+            );
+          }
+
+          const label = `ΔX: ${dxStr}, ΔY: ${dyStr}  •  Зазор: ${gapX}×${gapY} кл.`;
           const cursorTop = gridToScreenIso(pointer.gridX, pointer.gridY);
-          const boxCenterX = cursorTop.x;
-          const boxTopY = cursorTop.y - 68;
-
-          ctx.font = 'bold 12px JetBrains Mono, monospace';
-          const twText = ctx.measureText(label).width;
-          ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
-          ctx.strokeStyle = '#f59e0b';
-          ctx.lineWidth = 1.8;
-          ctx.fillRect(boxCenterX - twText / 2 - 10, boxTopY, twText + 20, 24);
-          ctx.strokeRect(boxCenterX - twText / 2 - 10, boxTopY, twText + 20, 24);
-          ctx.fillStyle = '#fde047';
-          ctx.fillText(label, boxCenterX, boxTopY + 16);
+          drawContrastBadge(
+            ctx,
+            label,
+            cursorTop.x,
+            cursorTop.y - 58,
+            '#00f0ff',
+            '#ffffff',
+            'bold 12px JetBrains Mono, monospace'
+          );
         }
         ctx.restore();
       }
 
       if (pointer.gridX !== null && pointer.gridY !== null && state.tool !== 'pan') {
         let previewItem = ITEM_BY_ID[state.selectedItemId];
+        let effDims = getEffectiveDims(previewItem);
         let gx = pointer.gridX;
         let gy = pointer.gridY;
-        let gw = previewItem ? previewItem.w : 1;
-        let gh = previewItem ? previewItem.h : 1;
+        let gw = effDims.w;
+        let gh = effDims.h;
 
         if (pointer.movingPlacement) {
           previewItem = ITEM_BY_ID[pointer.movingPlacement.itemId];
@@ -1611,6 +1997,10 @@ if (state.viewMode === 'iso') {
           gy = pointer.gridY - pointer.movingPlacement.offsetY;
           gw = pointer.movingPlacement.w;
           gh = pointer.movingPlacement.h;
+        } else if (pointer.placingNewBuilding) {
+          previewItem = ITEM_BY_ID[pointer.placingNewBuilding.itemId];
+          gw = pointer.placingNewBuilding.w;
+          gh = pointer.placingNewBuilding.h;
         }
 
         if (previewItem && !['area_move', 'isolate', 'foreman', 'ruler'].includes(state.tool)) {
@@ -1677,37 +2067,6 @@ if (state.viewMode === 'iso') {
         ctx.fillStyle = '#38bdf8';
         ctx.fillText(coordText, cursorScreen.x, cursorScreen.y - 22);
         ctx.restore();
-      }
-    }
-    
-
-    function render2dIsland(showGrid, showAxes, showLabels, showReserves) {
-      const cellSize = CELL_2D;
-      const originX = -(GRID_SIZE * cellSize) / 2;
-      const originY = -(GRID_SIZE * cellSize) / 2;
-
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(originX, originY, GRID_SIZE * cellSize, GRID_SIZE * cellSize);
-      ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(originX, originY, GRID_SIZE * cellSize, GRID_SIZE * cellSize);
-
-      if (showGrid) {
-        ctx.strokeStyle = 'rgba(51, 65, 85, 0.3)';
-        ctx.lineWidth = 0.5;
-        for (let i = 0; i <= GRID_SIZE; i++) {
-          ctx.beginPath(); ctx.moveTo(originX + i * cellSize, originY); ctx.lineTo(originX + i * cellSize, originY + GRID_SIZE * cellSize); ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(originX, originY + i * cellSize); ctx.lineTo(originX + GRID_SIZE * cellSize, originY + i * cellSize); ctx.stroke();
-        }
-      }
-
-      for (const p of state.placements.values()) {
-        const item = ITEM_BY_ID[p.itemId];
-        if (!item) continue;
-        const rx = originX + (p.x - 1) * cellSize;
-        const ry = originY + (p.y - 1) * cellSize;
-        ctx.fillStyle = item.color || '#38bdf8';
-        ctx.fillRect(rx + 1, ry + 1, p.w * cellSize - 2, p.h * cellSize - 2);
       }
     }
 
@@ -1798,18 +2157,9 @@ if (state.viewMode === 'iso') {
       const scaledX = cx / camera.zoom;
       const scaledY = cy / camera.zoom;
 
-      if (state.viewMode === 'iso') {
-        const gx = scaledX / (2 * ISO_DX) + scaledY / (2 * ISO_DY);
-        const gy = scaledY / (2 * ISO_DY) - scaledX / (2 * ISO_DX);
-        return { x: Math.floor(gx), y: Math.floor(gy) };
-      } else {
-        const cellSize = CELL_2D;
-        const originX = -(GRID_SIZE * cellSize) / 2;
-        const originY = -(GRID_SIZE * cellSize) / 2;
-        const gx = Math.floor((scaledX - originX) / cellSize) + 1;
-        const gy = Math.floor((scaledY - originY) / cellSize) + 1;
-        return { x: gx, y: gy };
-      }
+      const gx = scaledX / (2 * ISO_DX) + scaledY / (2 * ISO_DY);
+      const gy = scaledY / (2 * ISO_DY) - scaledX / (2 * ISO_DX);
+      return { x: Math.floor(gx), y: Math.floor(gy) };
     }
 
     // Проверка: свободны ли клетки под постройкой (x, y, w, h)
@@ -1837,7 +2187,17 @@ if (state.viewMode === 'iso') {
         if (uid !== 0) {
           const p = state.placements.get(uid);
           const item = ITEM_BY_ID[p.itemId];
-          document.getElementById('hudCellInfo').textContent = `${item.name} (${item.w}×${item.h}) — Зажмите ЛКМ, чтобы перетащить`;
+          let extraInfo = 'ЛКМ — тянуть • СКМ/Alt — пипетка';
+          if (p.w === 1 && p.h === 1) {
+            const ls = getLineStatsAtCell(g.x, g.y);
+            const parts = [];
+            if (ls && ls.lenX >= 2) parts.push(`Линия X: ${ls.lenX} кл. [${ls.x1}..${ls.x2}]`);
+            if (ls && ls.lenY >= 2) parts.push(`Линия Y: ${ls.lenY} кл. [${ls.y1}..${ls.y2}]`);
+            if (parts.length > 0) extraInfo = parts.join(' • ');
+          } else if (isItemRotatable(item)) {
+            extraInfo = 'Пробел — повернуть • СКМ/Alt — пипетка';
+          }
+          document.getElementById('hudCellInfo').textContent = `${item.name} (${p.w}×${p.h}) — ${extraInfo}`;
         } else {
           document.getElementById('hudCellInfo').textContent = 'Пустая клетка';
         }
@@ -1904,6 +2264,7 @@ if (state.viewMode === 'iso') {
           if (p && isItemVisibleOnMap(p.itemId) && !!p.built !== pointer.foremanTargetState) {
             p.built = pointer.foremanTargetState;
             updateSpecialModeBanner();
+            saveAutosaveDraft();
           }
         }
         requestRender();
@@ -1913,7 +2274,41 @@ if (state.viewMode === 'iso') {
       requestRender();
     });
 
+    // Пипетка: выбор образца постройки с карты (Alt + ЛКМ или клик колёсиком мыши)
+    function pickBuildingAtGrid(gx, gy) {
+      if (!isInsideGrid(gx, gy)) return false;
+      const uid = state.grid[gy][gx];
+      if (uid === 0) {
+        showToast("Пипетка: клетка пуста");
+        return false;
+      }
+      const p = state.placements.get(uid);
+      const item = p ? ITEM_BY_ID[p.itemId] : null;
+      if (!item) return false;
+
+      state.isRotated = isItemRotatable(item) && (p.w === item.h && p.h === item.w && item.w !== item.h);
+      selectItem(item.id);
+      const card = document.getElementById(`catalog-card-${item.id}`);
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      if (state.tool !== 'isolate' && state.tool !== 'foreman') {
+        setTool('brush');
+      }
+      showToast(`Пипетка: выбрано «${item.name}» (${p.w}×${p.h})`);
+      return true;
+    }
+
     canvas.addEventListener('mousedown', e => {
+      // Клик колёсиком мыши (СКМ) или Alt + ЛКМ — инструмент «Пипетка»
+      if (e.button === 1 || (e.button === 0 && e.altKey)) {
+        e.preventDefault();
+        pointer.isDown = false;
+        if (pointer.gridX !== null && pointer.gridY !== null) {
+          pickBuildingAtGrid(pointer.gridX, pointer.gridY);
+        }
+        return;
+      }
+
       pointer.isDown = true;
       pointer.button = e.button;
 
@@ -1931,15 +2326,32 @@ if (state.viewMode === 'iso') {
         const clickedPlacement = clickedUid !== 0 ? state.placements.get(clickedUid) : null;
         const clickedItem = clickedPlacement ? ITEM_BY_ID[clickedPlacement.itemId] : null;
 
-        // 0-A. Режим «Изоляция»: клик по постройке на карте оставляет только этот тип
+        // 0-A. Режим «Изоляция»: клик по постройке изолирует тип, а повторный клик по клетке фиксирует замер линии X/Y
         if (state.tool === 'isolate') {
           if (clickedPlacement) {
-            state.isolatedItemId = clickedPlacement.itemId;
-            selectItem(clickedPlacement.itemId);
+            if (state.isolatedItemId === clickedPlacement.itemId) {
+              if (state.pinnedLineCell && state.pinnedLineCell.x === pointer.gridX && state.pinnedLineCell.y === pointer.gridY) {
+                state.pinnedLineCell = null;
+                showToast("Фиксация замера линии снята");
+              } else {
+                state.pinnedLineCell = { x: pointer.gridX, y: pointer.gridY };
+                const ls = getLineStatsAtCell(pointer.gridX, pointer.gridY);
+                if (ls) {
+                  showToast(`Замер закреплён: Ось X = ${ls.lenX} кл. [${ls.x1}..${ls.x2}], Ось Y = ${ls.lenY} кл. [${ls.y1}..${ls.y2}]`);
+                }
+              }
+            } else {
+              state.isolatedItemId = clickedPlacement.itemId;
+              state.pinnedLineCell = null;
+              selectItem(clickedPlacement.itemId);
+              showToast(`Изолировано: «${clickedItem.name}» (${state.counts[clickedItem.id] || 0} шт.) • Наведите курсор для замера линий`);
+            }
             updateSpecialModeBanner();
             requestRender();
-            showToast(`Изолировано: «${clickedItem.name}» (${state.counts[clickedItem.id] || 0} шт.)`);
           } else {
+            state.pinnedLineCell = null;
+            updateSpecialModeBanner();
+            requestRender();
             showToast("Кликните на любую постройку на карте или выберите её в левом каталоге");
           }
           return;
@@ -1951,6 +2363,7 @@ if (state.viewMode === 'iso') {
             clickedPlacement.built = !clickedPlacement.built;
             pointer.foremanTargetState = clickedPlacement.built;
             updateSpecialModeBanner();
+            saveAutosaveDraft();
             requestRender();
           } else {
             pointer.foremanTargetState = null;
@@ -2003,6 +2416,7 @@ if (state.viewMode === 'iso') {
               offsetY: pointer.gridY - clickedPlacement.y
             };
             removeUid(clickedUid);
+            state.isRotated = isItemRotatable(clickedItem) && (clickedPlacement.w === clickedItem.h && clickedPlacement.h === clickedItem.w && clickedItem.w !== clickedItem.h);
             selectItem(clickedPlacement.itemId);
             refreshAllUI();
             requestRender();
@@ -2021,10 +2435,11 @@ if (state.viewMode === 'iso') {
           // Если это здание 2x2 и больше — НЕ ставим его сразу в момент нажатия,
           // а включаем режим примерочного перетаскивания до отпускания кнопки мыши!
           if (item.w >= 2 || item.h >= 2) {
+            const eff = getEffectiveDims(item);
             pointer.placingNewBuilding = {
               itemId: item.id,
-              w: item.w,
-              h: item.h
+              w: eff.w,
+              h: eff.h
             };
             requestRender();
             return;
@@ -2425,10 +2840,11 @@ if (state.viewMode === 'iso') {
           const minX = Math.min(s.x, ed.x), maxX = Math.max(s.x, ed.x);
           const minY = Math.min(s.y, ed.y), maxY = Math.max(s.y, ed.y);
 
+          const eff = getEffectiveDims(item);
           if (state.tool === 'rect') {
-            for (let y = minY; y <= maxY; y += item.h) {
-              for (let x = minX; x <= maxX; x += item.w) {
-                placeWithSymmetry(item.id, x, y, item.w, item.h);
+            for (let y = minY; y <= maxY; y += eff.h) {
+              for (let x = minX; x <= maxX; x += eff.w) {
+                placeWithSymmetry(item.id, x, y, eff.w, eff.h);
               }
             }
           } else if (state.tool === 'frame') {
@@ -2445,7 +2861,7 @@ if (state.viewMode === 'iso') {
             const sx = s.x < ed.x ? 1 : -1, sy = s.y < ed.y ? 1 : -1;
             let err = dx - dy, cx = s.x, cy = s.y;
             while (true) {
-              placeWithSymmetry(item.id, cx, cy, item.w, item.h);
+              placeWithSymmetry(item.id, cx, cy, eff.w, eff.h);
               if (cx === ed.x && cy === ed.y) break;
               const e2 = 2 * err;
               if (e2 > -dy) { err -= dy; cx += sx; }
@@ -2497,6 +2913,7 @@ function toggleIsolationMode() {
 
     function clearIsolationMode() {
       state.isolatedItemId = null;
+      state.pinnedLineCell = null;
       if (state.tool === 'isolate') {
         state.tool = 'brush';
       }
@@ -2558,6 +2975,7 @@ function toggleIsolationMode() {
         }
       }
       updateSpecialModeBanner();
+      saveAutosaveDraft();
       requestRender();
       showToast(flag ? "Все видимые постройки отмечены ✓" : "Отметки с видимых построек сняты");
     }
@@ -2567,6 +2985,7 @@ function toggleIsolationMode() {
         p.built = false;
       }
       updateSpecialModeBanner();
+      saveAutosaveDraft();
       requestRender();
       showToast("Все отметки Прораба сброшены");
     }
@@ -2591,11 +3010,13 @@ function toggleIsolationMode() {
             }
           }
         }
+        const lineRunsCount = it && it.w === 1 && it.h === 1 ? computeStraightLineRuns().length : 0;
+        const lineRunsBadge = lineRunsCount > 0 ? ` • Прямых линий (3+ кл.): <b class="text-amber-300">${lineRunsCount}</b>` : '';
         banner.classList.remove('hidden');
         banner.innerHTML = it
           ? `
             <span class="text-cyan-300 font-bold"><i class="fa-solid fa-eye mr-1"></i>Изоляция: «${it.name}»</span>
-            <span class="text-slate-300 font-mono">На карте: <b>${total}</b> шт. (Отмечено ✓: <b class="text-emerald-400">${built}/${total}</b>)</span>
+            <span class="text-slate-300 font-mono">На карте: <b>${total}</b> шт. (Отмечено ✓: <b class="text-emerald-400">${built}/${total}</b>)${lineRunsBadge}</span>
             <button onclick="setTool('foreman')" class="px-2 py-0.5 rounded bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-200 font-semibold transition">Отмечать ✓</button>
             <button onclick="clearIsolationMode()" class="px-2.5 py-0.5 rounded bg-rose-600 hover:bg-rose-500 text-white font-bold transition">Вернуть всё (Esc)</button>
           `
@@ -2675,7 +3096,87 @@ function toggleIsolationMode() {
       showToast(`Симметрия: ${s === 'none' ? 'Выкл' : s.toUpperCase()}`);
     }
 
+    function toggleBuildingRotation() {
+      // 1. Если прямо сейчас перетаскиваем существующую постройку
+      if (pointer.movingPlacement) {
+        const mp = pointer.movingPlacement;
+        if (mp.w !== mp.h) {
+          const tmp = mp.w;
+          mp.w = mp.h;
+          mp.h = tmp;
+          state.isRotated = !state.isRotated;
+          refreshActiveBanner();
+          requestRender();
+          showToast(`Повёрнуто: ${mp.w}×${mp.h}`);
+          return;
+        }
+      }
+
+      // 2. Если прямо сейчас зажата ЛКМ при примерочной установке нового здания
+      if (pointer.placingNewBuilding) {
+        const nb = pointer.placingNewBuilding;
+        if (nb.w !== nb.h) {
+          const tmp = nb.w;
+          nb.w = nb.h;
+          nb.h = tmp;
+          state.isRotated = !state.isRotated;
+          refreshActiveBanner();
+          requestRender();
+          showToast(`Повёрнуто: ${nb.w}×${nb.h}`);
+          return;
+        }
+      }
+
+      // 3. Если курсор наведён на уже установленную асимметричную постройку на карте — разворачиваем её на месте
+      if (pointer.gridX !== null && pointer.gridY !== null && !pointer.isDown) {
+        const hoverUid = state.grid[pointer.gridY]?.[pointer.gridX];
+        if (hoverUid) {
+          const hp = state.placements.get(hoverUid);
+          const hItem = hp ? ITEM_BY_ID[hp.itemId] : null;
+          if (hp && hItem && isItemRotatable(hItem)) {
+            const newW = hp.h;
+            const newH = hp.w;
+            const overwrite = document.getElementById('overwriteToggle').checked;
+            if (isInsideGrid(hp.x, hp.y, newW, newH) && (overwrite || isAreaFree(hp.x, hp.y, newW, newH, hoverUid))) {
+              pushHistory();
+              const wasBuilt = !!hp.built;
+              removeUid(hoverUid);
+              const res = placeObjectDirect(hItem.id, hp.x, hp.y, newW, newH, overwrite);
+              if (res.ok && res.uid && wasBuilt) {
+                const rec = state.placements.get(res.uid);
+                if (rec) rec.built = true;
+              }
+              state.isRotated = (newW === hItem.h && newH === hItem.w);
+              selectItem(hItem.id);
+              refreshAllUI();
+              requestRender();
+              showToast(`«${hItem.name}» развёрнут на карте: ${newW}×${newH}`);
+              return;
+            } else {
+              showToast(`Недостаточно места для разворота в ${newW}×${newH}`);
+              return;
+            }
+          }
+        }
+      }
+
+      // 4. Переключаем ориентацию выбранной в каталоге асимметричной постройки
+      const activeItem = ITEM_BY_ID[state.selectedItemId];
+      if (activeItem && isItemRotatable(activeItem)) {
+        state.isRotated = !state.isRotated;
+        const eff = getEffectiveDims(activeItem);
+        refreshActiveBanner();
+        requestRender();
+        showToast(`Ориентация «${activeItem.name}»: ${eff.w}×${eff.h}`);
+      } else {
+        showToast("Выбранная постройка симметрична (поворот меняет только объекты 5×3 ↔ 3×5)");
+      }
+    }
+
     function selectItem(id) {
+      if (state.selectedItemId !== id) {
+        state.isRotated = false;
+      }
       state.selectedItemId = id;
       if (state.tool === 'isolate' || state.isolatedItemId !== null) {
         state.isolatedItemId = id;
@@ -2736,6 +3237,12 @@ function toggleIsolationMode() {
         case 'Delete': setTool('delete_type'); break;
         case 'KeyE': setTool('erase'); break;
         case 'KeyG': setTool('fill'); break;
+        case 'BracketLeft': toggleLeftSidebar(); break;
+        case 'BracketRight': toggleRightSidebar(); break;
+        case 'Space':
+          e.preventDefault();
+          toggleBuildingRotation();
+          break;
       }
     });
 
@@ -2793,6 +3300,28 @@ function toggleIsolationMode() {
       setTimeout(() => t.classList.add('opacity-0'), 2500);
     }
 
+    function toggleLeftSidebar() {
+      const el = document.getElementById('leftSidebar');
+      const icon = document.getElementById('toggleLeftSidebarIcon');
+      if (!el) return;
+      const isHidden = el.classList.toggle('hidden');
+      if (icon) {
+        icon.className = isHidden ? 'fa-solid fa-angles-right text-xs text-sky-400' : 'fa-solid fa-angles-left text-xs';
+      }
+      resizeCanvas();
+    }
+
+    function toggleRightSidebar() {
+      const el = document.getElementById('rightSidebar');
+      const icon = document.getElementById('toggleRightSidebarIcon');
+      if (!el) return;
+      const isHidden = el.classList.toggle('hidden');
+      if (icon) {
+        icon.className = isHidden ? 'fa-solid fa-angles-left text-xs text-sky-400' : 'fa-solid fa-angles-right text-xs';
+      }
+      resizeCanvas();
+    }
+
     function zoomBy(f) {
       camera.zoom = Math.max(0.15, Math.min(3.5, camera.zoom * f));
       document.getElementById('zoomLabel').textContent = `${Math.round(camera.zoom * 100)}%`;
@@ -2810,48 +3339,27 @@ function toggleIsolationMode() {
       const availW = Math.max(120, canvas.width - padX * 2);
       const availH = Math.max(120, canvas.height - padY * 2);
 
-      if (state.viewMode === 'iso') {
-        const c1 = gridToScreenIso(gx, gy);
-        const c2 = gridToScreenIso(gx + gw, gy);
-        const c3 = gridToScreenIso(gx + gw, gy + gh);
-        const c4 = gridToScreenIso(gx, gy + gh);
+      const c1 = gridToScreenIso(gx, gy);
+      const c2 = gridToScreenIso(gx + gw, gy);
+      const c3 = gridToScreenIso(gx + gw, gy + gh);
+      const c4 = gridToScreenIso(gx, gy + gh);
 
-        const minX = Math.min(c1.x, c2.x, c3.x, c4.x);
-        const maxX = Math.max(c1.x, c2.x, c3.x, c4.x);
-        const minY = Math.min(c1.y, c2.y, c3.y, c4.y);
-        const maxY = Math.max(c1.y, c2.y, c3.y, c4.y);
+      const minX = Math.min(c1.x, c2.x, c3.x, c4.x);
+      const maxX = Math.max(c1.x, c2.x, c3.x, c4.x);
+      const minY = Math.min(c1.y, c2.y, c3.y, c4.y);
+      const maxY = Math.max(c1.y, c2.y, c3.y, c4.y);
 
-        const boxW = Math.max(1, maxX - minX);
-        const boxH = Math.max(1, maxY - minY);
+      const boxW = Math.max(1, maxX - minX);
+      const boxH = Math.max(1, maxY - minY);
 
-        const zoomX = availW / boxW;
-        const zoomY = availH / boxH;
-        camera.zoom = Math.max(0.15, Math.min(3.5, Math.min(zoomX, zoomY)));
+      const zoomX = availW / boxW;
+      const zoomY = availH / boxH;
+      camera.zoom = Math.max(0.15, Math.min(3.5, Math.min(zoomX, zoomY)));
 
-        const centerX = (minX + maxX) / 2;
-        const centerY = (minY + maxY) / 2;
-        camera.x = -centerX * camera.zoom;
-        camera.y = -centerY * camera.zoom;
-      } else {
-        const cellSize = CELL_2D;
-        const originX = -(GRID_SIZE * cellSize) / 2;
-        const originY = -(GRID_SIZE * cellSize) / 2;
-
-        const minX = originX + (gx - 1) * cellSize;
-        const maxX = originX + (gx - 1 + gw) * cellSize;
-        const minY = originY + (gy - 1) * cellSize;
-        const maxY = originY + (gy - 1 + gh) * cellSize;
-
-        const boxW = Math.max(1, maxX - minX);
-        const boxH = Math.max(1, maxY - minY);
-
-        camera.zoom = Math.max(0.15, Math.min(3.5, Math.min(availW / boxW, availH / boxH)));
-
-        const centerX = (minX + maxX) / 2;
-        const centerY = (minY + maxY) / 2;
-        camera.x = -centerX * camera.zoom;
-        camera.y = -centerY * camera.zoom;
-      }
+      const centerX = (minX + maxX) / 2;
+      const centerY = (minY + maxY) / 2;
+      camera.x = -centerX * camera.zoom;
+      camera.y = -centerY * camera.zoom;
 
       document.getElementById('zoomLabel').textContent = `${Math.round(camera.zoom * 100)}%`;
       requestRender();
@@ -2904,6 +3412,8 @@ function toggleIsolationMode() {
       const item = ITEM_BY_ID[state.selectedItemId];
       if (!item) return;
       const count = state.counts[item.id] || 0;
+      const eff = getEffectiveDims(item);
+      const canRotate = isItemRotatable(item);
       document.getElementById('activeItemBanner').innerHTML = `
         <div class="flex items-center gap-2.5">
           <div class="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center overflow-hidden shrink-0">
@@ -2911,11 +3421,17 @@ function toggleIsolationMode() {
           </div>
           <div class="flex-1 min-w-0">
             <div class="text-xs font-bold text-white truncate">${item.name}</div>
-            <div class="text-[10px] text-slate-400 flex items-center gap-2">
-              <span>Размер: <b class="text-slate-200">${item.w}×${item.h}</b></span>
+            <div class="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5">
+              <span>Размер: <b class="text-sky-300 font-mono">${eff.w}×${eff.h}</b></span>
               <span>Лимит: <b class="text-slate-200">${count}/${item.limit}</b></span>
             </div>
           </div>
+          ${canRotate ? `
+            <button onclick="toggleBuildingRotation()" title="Повернуть постройку ${item.w}×${item.h} ↔ ${item.h}×${item.w} (Клавиша Пробел)" class="px-2 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-[11px] font-semibold transition flex items-center gap-1 shrink-0">
+              <i class="fa-solid fa-rotate"></i>
+              <span>${eff.w}×${eff.h}</span>
+            </button>
+          ` : ''}
         </div>
       `;
     }
@@ -3087,6 +3603,7 @@ function refreshAllUI() {
       });
 
       auditContainer.innerHTML = htmlContent;
+      saveAutosaveDraft();
     }
     
   
@@ -3217,20 +3734,12 @@ function deleteSlotByIndex(index) {
         pointer.gridX = null;
         pointer.gridY = null;
 
-        if (state.viewMode === 'iso') {
-          // Полный размер изометрического ромба 60x60 в масштабе 100% с запасом под высокие башни
-          canvas.width = 3920;
-          canvas.height = 2920;
-          camera.zoom = 1.0;
-          camera.x = 0;
-          camera.y = -1300;
-        } else {
-          canvas.width = 1480;
-          canvas.height = 1480;
-          camera.zoom = 1.0;
-          camera.x = 0;
-          camera.y = 0;
-        }
+        // Полный размер изометрического ромба 60x60 в масштабе 100% с запасом под высокие башни
+        canvas.width = 3920;
+        canvas.height = 2920;
+        camera.zoom = 1.0;
+        camera.x = 0;
+        camera.y = -1300;
 
         // Синхронно отрисовываем сцену в высоком разрешении
         renderScene();
@@ -3445,7 +3954,29 @@ window.addEventListener('DOMContentLoaded', () => {
       focusGridRect(1, 1, 60, 60);
       updateCustomViewBtnState();
       selectItem(1);
-      refreshAllUI();
+
+      // Автоматическое восстановление черновика при открытии или обновлении страницы
+      let restoredDraft = false;
+      const rawDraft = localStorage.getItem('island_autosave_draft');
+      if (rawDraft) {
+        try {
+          const parsedDraft = JSON.parse(rawDraft);
+          if (parsedDraft && Array.isArray(parsedDraft.list)) {
+            restoreSnapshot(parsedDraft);
+            restoredDraft = true;
+          }
+        } catch (e) {}
+      }
+
+      if (!restoredDraft) {
+        refreshAllUI();
+      }
+
+      isInitializing = false;
+      saveAutosaveDraft();
+      if (restoredDraft && state.placements.size > 0) {
+        showToast(`Черновик «${state.projectName}» автоматически восстановлен`);
+      }
     });
   </script>
 </body>

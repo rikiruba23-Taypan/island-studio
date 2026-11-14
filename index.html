@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -78,6 +79,11 @@
     canvas {
       display: block;
       cursor: crosshair;
+    }
+    #smartHelpTooltip {
+      pointer-events: none;
+      transition: opacity 0.14s ease, transform 0.14s ease;
+      box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.85), 0 0 25px rgba(14, 165, 233, 0.18);
     }
   </style>
 </head>
@@ -194,6 +200,10 @@
         <i class="fa-solid fa-circle-question text-indigo-400"></i>
         <span class="hidden xl:inline">Инструкция</span>
       </a>
+      <button id="shareUrlHeaderBtn" onclick="copyShareableProjectUrl()" class="px-2.5 py-1.5 rounded-lg bg-sky-600/20 hover:bg-sky-600/35 border border-sky-500/40 text-xs font-semibold text-sky-300 hover:text-white transition flex items-center gap-1.5">
+        <i class="fa-solid fa-link text-sky-400"></i>
+        <span class="hidden xl:inline">Ссылка</span>
+      </button>
       <button onclick="openSlotsModal()" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition flex items-center gap-1.5">
         <i class="fa-solid fa-floppy-disk text-sky-400"></i>
         <span class="hidden xl:inline">Проекты</span>
@@ -247,69 +257,71 @@
     <!-- CENTER VIEWPORT -->
     <main class="flex-1 relative bg-slate-950 overflow-hidden flex flex-col">
       <div class="absolute top-3 left-3 right-3 flex flex-col gap-2 pointer-events-none z-10">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <!-- Левая группа: Скрытие левого меню + Координаты + Отменить/Повторить -->
-          <div class="flex items-center gap-2 pointer-events-auto">
-            <button onclick="toggleLeftSidebar()" id="toggleLeftSidebarBtn" title="Скрыть/показать левый каталог (Клавиша [)" class="glass-panel w-8 h-8 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:border-sky-500/50 shadow-lg transition">
-              <i class="fa-solid fa-angles-left text-xs" id="toggleLeftSidebarIcon"></i>
-            </button>
+        <!-- Верхний ряд с жёсткой привязкой кнопок скрытия панелей по краям -->
+        <div class="flex items-start justify-between gap-2 w-full">
+          <!-- Левая кнопка скрытия каталога (всегда строго в левом углу) -->
+          <button onclick="toggleLeftSidebar()" id="toggleLeftSidebarBtn" title="Скрыть/показать левый каталог (Клавиша [)" class="glass-panel w-8 h-8 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:border-sky-500/50 shadow-lg transition shrink-0 pointer-events-auto">
+            <i class="fa-solid fa-angles-left text-xs" id="toggleLeftSidebarIcon"></i>
+          </button>
 
-            <!-- Координаты и инфо о клетке -->
-            <div class="glass-panel px-3 py-1.5 rounded-xl flex items-center gap-3 shadow-lg">
-              <div class="flex items-center gap-1.5">
-                <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
-                <span class="text-xs font-mono font-bold text-sky-300" id="hudCoords">X: --, Y: --</span>
+          <!-- Центральная группа плашек (Координаты + Отмена/Повтор + Слои + Чекбоксы) -->
+          <div class="flex-1 flex flex-wrap items-center justify-between gap-1.5 min-w-0">
+            <!-- Левая подгруппа: Координаты + Отменить/Повторить -->
+            <div class="flex items-center gap-1.5 pointer-events-auto">
+              <div class="glass-panel px-2.5 py-1.5 rounded-xl flex items-center gap-2.5 shadow-lg">
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+                  <span class="text-xs font-mono font-bold text-sky-300 whitespace-nowrap" id="hudCoords">X: --, Y: --</span>
+                </div>
+                <div class="h-3.5 w-px bg-slate-700"></div>
+                <div class="text-xs text-slate-300 truncate max-w-[180px] 2xl:max-w-[230px]" id="hudCellInfo">Наведите курсор на сетку острова</div>
               </div>
-              <div class="h-3.5 w-px bg-slate-700"></div>
-              <div class="text-xs text-slate-300 truncate max-w-[240px]" id="hudCellInfo">Наведите курсор на сетку острова</div>
+
+              <!-- Кнопки Отменить и Повторить -->
+              <div class="glass-panel p-1 rounded-xl flex items-center gap-0.5 shadow-lg">
+                <button onclick="undo()" id="undoBtn" title="Отменить действие (Ctrl+Z)" class="px-2 py-1 rounded-lg hover:bg-slate-800 text-xs font-medium text-slate-200 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition flex items-center gap-1">
+                  <i class="fa-solid fa-rotate-left text-sky-400"></i>
+                  <span class="hidden 2xl:inline text-[11px]">Отменить</span>
+                </button>
+                <div class="h-3.5 w-px bg-slate-700/80"></div>
+                <button onclick="redo()" id="redoBtn" title="Повторить действие (Ctrl+Y)" class="px-2 py-1 rounded-lg hover:bg-slate-800 text-xs font-medium text-slate-200 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition flex items-center gap-1">
+                  <i class="fa-solid fa-rotate-right text-sky-400"></i>
+                  <span class="hidden 2xl:inline text-[11px]">Повторить</span>
+                </button>
+              </div>
             </div>
 
-            <!-- Кнопки Отменить и Повторить (между координатами и слоями) -->
-            <div class="glass-panel p-1 rounded-xl flex items-center gap-0.5 shadow-lg">
-              <button onclick="undo()" id="undoBtn" title="Отменить действие (Ctrl+Z)" class="px-2.5 py-1 rounded-lg hover:bg-slate-800 text-xs font-medium text-slate-200 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition flex items-center gap-1">
-                <i class="fa-solid fa-rotate-left text-sky-400"></i>
-                <span class="hidden 2xl:inline text-[11px]">Отменить</span>
+            <!-- Поэтапный мастер сборки (Детальные слои по категориям) -->
+            <div class="glass-panel px-2 py-1 rounded-xl flex flex-wrap items-center gap-1 pointer-events-auto shadow-lg text-xs">
+              <span class="text-[10px] font-mono uppercase text-slate-400 px-1 hidden 2xl:inline"><i class="fa-solid fa-layer-group text-sky-400 mr-1"></i>Слои:</span>
+              <button onclick="toggleLayer('buildings')" id="layer-btn-buildings" title="Слой 1: Здания и постройки из магазина/ивентов" class="px-1.5 py-0.5 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-semibold text-[11px] transition flex items-center gap-1">
+                <span>1. Здания</span>
               </button>
-              <div class="h-3.5 w-px bg-slate-700/80"></div>
-              <button onclick="redo()" id="redoBtn" title="Повторить действие (Ctrl+Y)" class="px-2.5 py-1 rounded-lg hover:bg-slate-800 text-xs font-medium text-slate-200 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition flex items-center gap-1">
-                <i class="fa-solid fa-rotate-right text-sky-400"></i>
-                <span class="hidden 2xl:inline text-[11px]">Повторить</span>
+              <button onclick="toggleLayer('roads')" id="layer-btn-roads" title="Слой 2: Тротуары, тропы и каменная кладка" class="px-1.5 py-0.5 rounded-lg bg-slate-400/20 border border-slate-400/40 text-slate-200 font-semibold text-[11px] transition flex items-center gap-1">
+                <span>2. Дорожки</span>
               </button>
+              <button onclick="toggleLayer('water')" id="layer-btn-water" title="Слой 3: Бассейн с подогревом (вода)" class="px-1.5 py-0.5 rounded-lg bg-sky-500/20 border border-sky-500/40 text-sky-300 font-semibold text-[11px] transition flex items-center gap-1">
+                <span>3. Вода</span>
+              </button>
+              <button onclick="toggleLayer('fences')" id="layer-btn-fences" title="Слой 4: Заборы, палисады и живые изгороди" class="px-1.5 py-0.5 rounded-lg bg-orange-500/20 border border-orange-500/40 text-orange-300 font-semibold text-[11px] transition flex items-center gap-1">
+                <span>4. Заборы</span>
+              </button>
+              <button onclick="toggleLayer('flora')" id="layer-btn-flora" title="Слой 5: Цветочные клумбы и розарии" class="px-1.5 py-0.5 rounded-lg bg-pink-500/20 border border-pink-500/40 text-pink-300 font-semibold text-[11px] transition flex items-center gap-1">
+                <span>5. Цветы</span>
+              </button>
+              <button onclick="toggleLayer('decor')" id="layer-btn-decor" title="Слой 6: Мелкий декор 1×1 (фонари, лавки и т.д.)" class="px-1.5 py-0.5 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-300 font-semibold text-[11px] transition flex items-center gap-1">
+                <span>6. Декор</span>
+              </button>
+              <button onclick="toggleLayer('forest')" id="layer-btn-forest" title="Слой 7: Деревья и лес" class="px-1.5 py-0.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-semibold text-[11px] transition flex items-center gap-1">
+                <span>7. Лес</span>
+              </button>
+              <div class="h-3.5 w-px bg-slate-700 mx-0.5"></div>
+              <button onclick="setAllLayers(true)" title="Показать все слои" class="px-1.5 py-0.5 rounded hover:bg-slate-800 text-[10px] text-sky-300 hover:text-white font-semibold transition">Все</button>
+              <button onclick="setAllLayers(false)" title="Скрыть все слои (чтобы включить только нужные)" class="px-1.5 py-0.5 rounded hover:bg-slate-800 text-[10px] text-slate-400 hover:text-white transition">Скрыть</button>
             </div>
-          </div>
 
-          <!-- Поэтапный мастер сборки (Детальные слои по категориям) -->
-          <div class="glass-panel px-2 py-1 rounded-xl flex flex-wrap items-center gap-1 pointer-events-auto shadow-lg text-xs">
-            <span class="text-[10px] font-mono uppercase text-slate-400 px-1 hidden 2xl:inline"><i class="fa-solid fa-layer-group text-sky-400 mr-1"></i>Слои:</span>
-            <button onclick="toggleLayer('buildings')" id="layer-btn-buildings" title="Слой 1: Здания и постройки из магазина/ивентов" class="px-2 py-0.5 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 font-semibold text-[11px] transition flex items-center gap-1">
-              <span>1. Здания</span>
-            </button>
-            <button onclick="toggleLayer('roads')" id="layer-btn-roads" title="Слой 2: Тротуары, тропы и каменная кладка" class="px-2 py-0.5 rounded-lg bg-slate-400/20 border border-slate-400/40 text-slate-200 font-semibold text-[11px] transition flex items-center gap-1">
-              <span>2. Дорожки</span>
-            </button>
-            <button onclick="toggleLayer('water')" id="layer-btn-water" title="Слой 3: Бассейн с подогревом (вода)" class="px-2 py-0.5 rounded-lg bg-sky-500/20 border border-sky-500/40 text-sky-300 font-semibold text-[11px] transition flex items-center gap-1">
-              <span>3. Вода</span>
-            </button>
-            <button onclick="toggleLayer('fences')" id="layer-btn-fences" title="Слой 4: Заборы, палисады и живые изгороди" class="px-2 py-0.5 rounded-lg bg-orange-500/20 border border-orange-500/40 text-orange-300 font-semibold text-[11px] transition flex items-center gap-1">
-              <span>4. Заборы</span>
-            </button>
-            <button onclick="toggleLayer('flora')" id="layer-btn-flora" title="Слой 5: Цветочные клумбы и розарии" class="px-2 py-0.5 rounded-lg bg-pink-500/20 border border-pink-500/40 text-pink-300 font-semibold text-[11px] transition flex items-center gap-1">
-              <span>5. Цветы</span>
-            </button>
-            <button onclick="toggleLayer('decor')" id="layer-btn-decor" title="Слой 6: Мелкий декор 1×1 (фонари, лавки и т.д.)" class="px-2 py-0.5 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-300 font-semibold text-[11px] transition flex items-center gap-1">
-              <span>6. Декор</span>
-            </button>
-            <button onclick="toggleLayer('forest')" id="layer-btn-forest" title="Слой 7: Деревья и лес" class="px-2 py-0.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-semibold text-[11px] transition flex items-center gap-1">
-              <span>7. Лес</span>
-            </button>
-            <div class="h-3.5 w-px bg-slate-700 mx-0.5"></div>
-            <button onclick="setAllLayers(true)" title="Показать все слои" class="px-1.5 py-0.5 rounded hover:bg-slate-800 text-[10px] text-sky-300 hover:text-white font-semibold transition">Все</button>
-            <button onclick="setAllLayers(false)" title="Скрыть все слои (чтобы включить только нужные)" class="px-1.5 py-0.5 rounded hover:bg-slate-800 text-[10px] text-slate-400 hover:text-white transition">Скрыть</button>
-          </div>
-
-          <!-- Правая группа: Чекбоксы отображения + Скрытие правого меню -->
-          <div class="flex items-center gap-2 pointer-events-auto">
-            <div class="glass-panel px-2.5 py-1.5 rounded-xl flex items-center gap-2 shadow-lg text-xs">
+            <!-- Чекбоксы отображения и эффектов -->
+            <div class="glass-panel px-2.5 py-1.5 rounded-xl flex flex-wrap items-center gap-2 shadow-lg text-xs pointer-events-auto ml-auto">
               <label class="flex items-center gap-1 cursor-pointer text-slate-300 hover:text-white">
                 <input type="checkbox" id="showGridCheck" checked onchange="requestRender()" class="accent-sky-500 rounded" />
                 <span>Сетка</span>
@@ -330,12 +342,26 @@
                 <input type="checkbox" id="showReservesCheck" checked onchange="requestRender()" class="accent-amber-500 rounded" />
                 <span>Резервы 3×3</span>
               </label>
+              <div class="h-3.5 w-px bg-slate-700/80 mx-0.5"></div>
+              <label id="soundFxToggleLabel" class="flex items-center gap-1 cursor-pointer text-amber-300 hover:text-amber-200">
+                <input type="checkbox" id="showSoundCheck" checked onchange="toggleSoundEffects(this.checked)" class="accent-amber-400 rounded" />
+                <span>Звук 🔊</span>
+              </label>
+              <label id="ambientFxToggleLabel" class="flex items-center gap-1 cursor-pointer text-cyan-300 hover:text-cyan-200">
+                <input type="checkbox" id="showFxCheck" checked onchange="toggleAmbientEffects(this.checked)" class="accent-cyan-400 rounded" />
+                <span>Эффекты ❄️</span>
+              </label>
+              <label id="smartTooltipsToggleLabel" class="flex items-center gap-1 cursor-pointer text-sky-300 hover:text-sky-200">
+                <input type="checkbox" id="showTooltipsCheck" checked onchange="toggleSmartTooltips(this.checked)" class="accent-sky-500 rounded" />
+                <span>Подсказки</span>
+              </label>
             </div>
-
-            <button onclick="toggleRightSidebar()" id="toggleRightSidebarBtn" title="Скрыть/показать правую панель статистики (Клавиша ])" class="glass-panel w-8 h-8 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:border-sky-500/50 shadow-lg transition">
-              <i class="fa-solid fa-angles-right text-xs" id="toggleRightSidebarIcon"></i>
-            </button>
           </div>
+
+          <!-- Правая кнопка скрытия статистики (всегда строго в правом углу) -->
+          <button onclick="toggleRightSidebar()" id="toggleRightSidebarBtn" title="Скрыть/показать правую панель статистики (Клавиша ])" class="glass-panel w-8 h-8 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:border-sky-500/50 shadow-lg transition shrink-0 pointer-events-auto">
+            <i class="fa-solid fa-angles-right text-xs" id="toggleRightSidebarIcon"></i>
+          </button>
         </div>
 
         <!-- Динамическая панель активного спецрежима (Изоляция / Прораб / Рулетка) -->
@@ -517,18 +543,27 @@
           <div class="text-xs font-semibold text-slate-400">Сохранённые слоты:</div>
           <div id="savedSlotsContainer" class="space-y-1.5 max-h-56 overflow-y-auto"></div>
         </div>
-        <div class="pt-3 border-t border-slate-800 flex items-center justify-between gap-2">
-          <button onclick="exportProjectJSON()" class="flex-1 py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-file-arrow-down text-sky-400"></i> Скачать .JSON
+        <div class="pt-3 border-t border-slate-800 space-y-2">
+          <button onclick="copyShareableProjectUrl()" class="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-sky-600/30 to-indigo-600/30 hover:from-sky-600/45 hover:to-indigo-600/45 border border-sky-500/40 text-xs font-semibold text-sky-200 hover:text-white transition flex items-center justify-center gap-2 shadow-lg">
+            <i class="fa-solid fa-link text-sky-400"></i>
+            <span>Скопировать прямую ссылку на проект (для друзей)</span>
           </button>
-          <label class="flex-1 py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition flex items-center justify-center gap-1.5 cursor-pointer">
-            <i class="fa-solid fa-file-arrow-up text-amber-400"></i> Загрузить .JSON
-            <input type="file" accept=".json" onchange="importProjectJSON(event)" class="hidden" />
-          </label>
+          <div class="flex items-center justify-between gap-2">
+            <button onclick="exportProjectJSON()" class="flex-1 py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-file-arrow-down text-sky-400"></i> Скачать .JSON
+            </button>
+            <label class="flex-1 py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-200 transition flex items-center justify-center gap-1.5 cursor-pointer">
+              <i class="fa-solid fa-file-arrow-up text-amber-400"></i> Загрузить .JSON
+              <input type="file" accept=".json" onchange="importProjectJSON(event)" class="hidden" />
+            </label>
+          </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- ВСПЛЫВАЮЩАЯ КАРТОЧКА-ИНСТРУКЦИЯ ПРИ НАВЕДЕНИИ -->
+  <div id="smartHelpTooltip" class="fixed z-[100] hidden opacity-0 w-80 sm:w-96 rounded-2xl bg-slate-950/95 backdrop-blur-xl border border-sky-500/40 p-3.5 text-xs text-slate-200"></div>
 
   <!-- SCRIPT -->
   <script>
@@ -816,6 +851,9 @@ CATALOG.forEach(it => {
       }
       state.placements.delete(uid);
       state.counts[p.itemId] = Math.max(0, (state.counts[p.itemId] || 0) - 1);
+      if (!isInitializing && typeof playStudioSfx === 'function' && state.tool === 'erase') {
+        playStudioSfx('erase');
+      }
     }
 
     function placeObjectDirect(itemId, x, y, w, h, allowOverwrite = true) {
@@ -859,6 +897,14 @@ CATALOG.forEach(it => {
         }
       }
       state.counts[itemId] = (state.counts[itemId] || 0) + 1;
+      if (!isInitializing) {
+        if (typeof spawnPlacementPulse === 'function') {
+          spawnPlacementPulse(x, y, w, h, item.color || '#38bdf8');
+        }
+        if (typeof playStudioSfx === 'function') {
+          playStudioSfx(w >= 2 || h >= 2 ? 'place_big' : 'place_tile');
+        }
+      }
       return { ok: true, uid };
     }
 
@@ -1192,8 +1238,16 @@ function resizeCanvas() {
 }
     window.addEventListener('resize', resizeCanvas);
 
+    let renderPending = false;
+    let isExportingPNG = false;
+
     function requestRender() {
-      requestAnimationFrame(renderScene);
+      if (renderPending) return;
+      renderPending = true;
+      requestAnimationFrame(() => {
+        renderPending = false;
+        renderScene();
+      });
     }
 
     function renderScene() {
@@ -1211,7 +1265,17 @@ function resizeCanvas() {
 
       renderIsoIsland(showGrid, showAxes, showLabels, showReserves);
 
+      // Мягкие импульсы и искры при установке построек (в мировых координатах острова)
+      if (ambientEffectsEnabled && !isExportingPNG && typeof renderPlacementPulsesWorld === 'function') {
+        renderPlacementPulsesWorld(ctx);
+      }
+
       ctx.restore();
+
+      // Лёгкий атмосферный снегопад над островом (в экранных координатах, не мешает прицеливанию)
+      if (ambientEffectsEnabled && !isExportingPNG && state.isolatedItemId === null && typeof renderAmbientSnowScreen === 'function') {
+        renderAmbientSnowScreen(ctx);
+      }
     }
 
     function gridToScreenIso(gx, gy) {
@@ -1596,6 +1660,21 @@ function resizeCanvas() {
             const drawX = centerX - drawW / 2;
             const drawY = bottomRight.y - drawH;
             ctx.drawImage(textureImg, drawX, drawY, drawW, drawH);
+
+            // Мягкое живое мерцание воды в бассейнах и каналах (если включены эффекты)
+            if (ambientEffectsEnabled && !isExportingPNG && item && item.netKind === 'water') {
+              const wave = 0.05 + 0.06 * Math.sin((performance.now() * 0.0028) + g.minX * 0.65 + g.minY * 0.45);
+              ctx.save();
+              ctx.fillStyle = `rgba(125, 211, 252, ${wave.toFixed(3)})`;
+              ctx.beginPath();
+              ctx.moveTo(topLeft.x, topLeft.y);
+              ctx.lineTo(topRight.x, topRight.y);
+              ctx.lineTo(bottomRight.x, bottomRight.y);
+              ctx.lineTo(bottomLeft.x, bottomLeft.y);
+              ctx.closePath();
+              ctx.fill();
+              ctx.restore();
+            }
           } else {
             ctx.fillStyle = item ? item.color : 'rgba(56,189,248,0.5)';
             ctx.beginPath();
@@ -2362,6 +2441,9 @@ function resizeCanvas() {
           if (clickedPlacement && isItemVisibleOnMap(clickedPlacement.itemId)) {
             clickedPlacement.built = !clickedPlacement.built;
             pointer.foremanTargetState = clickedPlacement.built;
+            if (typeof playStudioSfx === 'function') {
+              playStudioSfx(clickedPlacement.built ? 'check_on' : 'ui_click');
+            }
             updateSpecialModeBanner();
             saveAutosaveDraft();
             requestRender();
@@ -3067,6 +3149,9 @@ function toggleIsolationMode() {
 
     function setTool(t) {
       state.tool = t;
+      if (!isInitializing && typeof playStudioSfx === 'function') {
+        playStudioSfx('ui_click');
+      }
       document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
       const btn = document.getElementById(`tool-${t}`);
       if (btn) btn.classList.add('active');
@@ -3174,6 +3259,9 @@ function toggleIsolationMode() {
     }
 
     function selectItem(id) {
+      if (!isInitializing && state.selectedItemId !== id && typeof playStudioSfx === 'function') {
+        playStudioSfx('ui_click');
+      }
       if (state.selectedItemId !== id) {
         state.isRotated = false;
       }
@@ -3730,6 +3818,7 @@ function deleteSlotByIndex(index) {
       const origGridY = pointer.gridY;
 
       try {
+        isExportingPNG = true;
         // Убираем подсветку курсора, чтобы на рендере была чистая карта
         pointer.gridX = null;
         pointer.gridY = null;
@@ -3774,6 +3863,7 @@ function deleteSlotByIndex(index) {
         link.remove();
 
         // Мгновенно возвращаем экран пользователя в исходное состояние
+        isExportingPNG = false;
         canvas.width = origW;
         canvas.height = origH;
         camera.x = origCamX;
@@ -3785,6 +3875,7 @@ function deleteSlotByIndex(index) {
 
         showToast("Полная карта острова (Ultra-HD PNG) скачана!");
       } catch (err) {
+        isExportingPNG = false;
         // Восстанавливаем холст и включаем резервный режим скриншота, если открыто локально через file://
         canvas.width = origW;
         canvas.height = origH;
@@ -3948,33 +4039,1536 @@ function clearCategory(categoryName) {
   showToast(`Срублено объектов (${categoryName}): ${removedCount}`);
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+
+    // =========================================================================
+    // СИСТЕМА УМНЫХ ВСПЛЫВАЮЩИХ ИНСТРУКЦИЙ ПРИ НАВЕДЕНИИ (SMART TOOLTIPS)
+    // =========================================================================
+    let smartTooltipsEnabled = localStorage.getItem('island_smart_tooltips') !== '0';
+    let tooltipHoverTimer = null;
+    let currentTooltipAnchor = null;
+
+    const SMART_HELP_DICT = {
+      // --- 1. ПРОЕКТЫ И ШАБЛОНЫ В ШАПКЕ ---
+      'presetSelect': {
+        icon: 'fa-solid fa-city text-amber-400',
+        title: 'Выбор проекта или шаблона',
+        shortcut: 'Список проектов',
+        desc: 'Переключение между 4 встроенными шаблонами (включая «Чистый остров») и вашими личными сохранениями со звёздочкой ★.',
+        steps: [
+          'Выберите нужный макет или сохранённый проект в выпадающем списке.',
+          'Нажмите синюю кнопку <b>«Применить»</b> справа, чтобы загрузить его на карту.',
+          'Ваши собственные проекты добавляются сюда автоматически при сохранении.'
+        ]
+      },
+      'applySelectedPreset': {
+        icon: 'fa-solid fa-wand-magic-sparkles text-sky-400',
+        title: 'Применить выбранный проект',
+        shortcut: 'Загрузка на карту',
+        desc: 'Загружает выбранный в списке шаблон или ваш сохранённый проект на сетку острова 60×60.',
+        steps: [
+          'Сначала выберите нужный пункт в списке «Проект» слева от кнопки.',
+          'Нажмите <b>«Применить»</b> — текущая карта заменится выбранным проектом.',
+          'Если нажали случайно — верните прежнюю карту кнопкой <b>«Отменить» (Ctrl+Z)</b>.'
+        ]
+      },
+      'saveToPresetBtn': {
+        icon: 'fa-solid fa-floppy-disk text-emerald-400',
+        title: 'Быстрое сохранение в проект',
+        shortcut: 'Сохранение в 1 клик',
+        desc: 'Мгновенно перезаписывает вашу текущую планировку (вместе с отметками Прораба ✓) в выбранный в списке проект.',
+        steps: [
+          'Если в списке выбран ваш проект (★) — обновляет его в один клик.',
+          'Если выбран базовый шаблон — автоматически создаёт на его основе ваш личный проект со звёздочкой ★.',
+          'Кроме этого, студия автоматически сохраняет черновик после каждого вашего действия.'
+        ]
+      },
+      'deletePresetBtn': {
+        icon: 'fa-solid fa-trash-can text-rose-400',
+        title: 'Удалить выбранный проект',
+        shortcut: 'Очистка списка',
+        desc: 'Удаляет выбранный проект из выпадающего списка в шапке.',
+        steps: [
+          'Если выбран пользовательский проект (★) — удаляет этот слот из памяти браузера.',
+          'Если выбран стандартный шаблон — скрывает его из выпадающего списка.'
+        ]
+      },
+
+      // --- 2. ИНСТРУМЕНТЫ ТОЧНОГО ПЕРЕНОСА В ИГРУ ---
+      'tool-isolate': {
+        icon: 'fa-solid fa-eye text-cyan-400',
+        title: 'Режим «Изоляция» (Рентген построек)',
+        shortcut: 'Клавиша I / Esc',
+        desc: 'Оставляет на чистом размеченном поле только один выбранный тип объектов, скрывая весь остальной визуальный шум.',
+        steps: [
+          'Нажмите кнопку (или клавишу <b>I</b>), затем кликните по любой постройке на карте или в каталоге слева.',
+          'На экране останутся <b>только все объекты этого вида</b> с точными координатами <b>X:Y</b>.',
+          'Наведите курсор на дорожку/забор 1×1, чтобы увидеть длину прямой линии по осям X и Y, или <b>кликните ЛКМ</b> по клетке, чтобы закрепить замер.',
+          'Повторный клик по кнопке или клавиша <b>Esc</b> возвращает все объекты на место.'
+        ]
+      },
+      'tool-foreman': {
+        icon: 'fa-solid fa-clipboard-check text-emerald-400',
+        title: 'Режим «Прораб» (Чек-лист переноса)',
+        shortcut: 'Клавиша P',
+        desc: 'Позволяет отмечать крупной зелёной галочкой ✓ те здания, дороги и деревья, которые вы уже построили у себя в игре.',
+        steps: [
+          'Кликните ЛКМ по постройке на карте — она покроется изумрудной заливкой со значком <b>✓</b>.',
+          'Зажмите ЛКМ и ведите курсором вдоль дороги или забора, чтобы быстро отметить сразу весь ряд.',
+          'Повторный клик по отмеченной клетке снимает галочку ✓.',
+          'В верхней плашке отображается точный счётчик перенесённых объектов и кнопки массовой отметки/сброса.'
+        ]
+      },
+      'tool-ruler': {
+        icon: 'fa-solid fa-ruler-combined text-amber-400',
+        title: 'Инструмент «Рулетка» (Отсчёт от опоры)',
+        shortcut: 'Клавиша K',
+        desc: 'Измеряет точное смещение в клетках (ΔX, ΔY) и чистый пустой зазор от опорного здания до любой точки карты.',
+        steps: [
+          'Кликните ЛКМ на уже построенное в игре здание (например, «Дерево жизни») — на нём появится метка <b>⚓ ОПОРА</b>.',
+          'Наведите курсор на следующее здание — яркие линии покажут сдвиг по оси X (голубая), по оси Y (малиновая) и точный зазор в пустых клетках между их краями.',
+          'Нажмите <b>Esc</b> или кнопку «Сбросить опору» в баннере для очистки.'
+        ]
+      },
+
+      // --- 3. 9 ОСНОВНЫХ ИНСТРУМЕНТОВ СТРОИТЕЛЬСТВА ---
+      'tool-brush': {
+        icon: 'fa-solid fa-hammer text-sky-400',
+        title: 'Инструмент «Строить» (Кисть)',
+        shortcut: 'Клавиша B',
+        desc: 'Основной универсальный режим для установки новых зданий, рисования дорожек и быстрого перетаскивания.',
+        steps: [
+          '<b>Крупные здания (2×2 и больше):</b> зажмите ЛКМ на карте, наведите голубой контур на нужные координаты X/Y и отпустите кнопку мыши.',
+          '<b>Дороги, вода, заборы и лес (1×1):</b> зажмите ЛКМ и ведите курсором как кистью.',
+          '<b>Быстрый перенос:</b> зажмите ЛКМ прямо по уже стоящему зданию, чтобы перетащить его на новое место.',
+          '<b>Поворот (5×3 ↔ 3×5):</b> нажмите <b>Пробел</b>. <b>Пипетка:</b> нажмите колёсиком мыши (СКМ) или <b>Alt + ЛКМ</b> по любому объекту.'
+        ]
+      },
+      'tool-rect': {
+        icon: 'fa-solid fa-vector-square text-sky-400',
+        title: 'Инструмент «Зона» (Прямоугольник)',
+        shortcut: 'Клавиша R',
+        desc: 'Заполняет выбранным объектом сплошную прямоугольную площадку любого размера.',
+        steps: [
+          'Выберите в каталоге плитку, воду, клумбу, дерево или здание.',
+          'Зажмите ЛКМ в начальном углу, растяните прямоугольник до конечного угла и отпустите кнопку.',
+          'Отлично подходит для создания площадей, водоёмов 2×2+ и ровных кварталов.'
+        ]
+      },
+      'tool-frame': {
+        icon: 'fa-regular fa-square text-sky-400',
+        title: 'Инструмент «Рамка» (Периметр)',
+        shortcut: 'Клавиша F',
+        desc: 'Выстраивает замкнутый контур (рамку толщиной в 1 клетку), оставляя внутреннюю часть пустой.',
+        steps: [
+          'Выберите забор, живую изгородь, воду или дорожку в левом каталоге.',
+          'Зажмите ЛКМ в одном углу, растяните до противоположного угла и отпустите.',
+          'Идеально для быстрого ограждения кварталов и создания кольцевых каналов.'
+        ]
+      },
+      'tool-line': {
+        icon: 'fa-solid fa-slash text-sky-400',
+        title: 'Инструмент «Линия» (Трасса)',
+        shortcut: 'Клавиша L',
+        desc: 'Прокладывает идеально ровную прямую или диагональную линию между двумя точками.',
+        steps: [
+          'Зажмите ЛКМ в начальной клетке линии.',
+          'Протяните курсор до конечной клетки и отпустите кнопку мыши.'
+        ]
+      },
+      'tool-move': {
+        icon: 'fa-solid fa-up-down-left-right text-sky-400',
+        title: 'Инструмент «Двигать» (Безопасный перенос)',
+        shortcut: 'Клавиша M',
+        desc: 'Перемещает любые одиночные постройки (включая одиночные клетки дорог и леса) без риска случайно построить новый объект.',
+        steps: [
+          'Зажмите ЛКМ на постройке, которую хотите передвинуть.',
+          'Перетащите контур на новые координаты X/Y и отпустите кнопку мыши.',
+          'Если новое место занято (при выключенной галочке «Поверх»), постройка вернётся обратно.'
+        ]
+      },
+      'tool-area_move': {
+        icon: 'fa-solid fa-object-group text-purple-400',
+        title: 'Инструмент «Перенос зоны» (Групповой перенос)',
+        shortcut: 'Клавиша V',
+        desc: 'Захватывает сразу всю соприкасающуюся группу построек (например, целый квартал с забором, дорожками и зданиями) и переносит её целиком.',
+        steps: [
+          'Выберите «Перенос зоны» и зажмите ЛКМ на любом объекте внутри нужной группы.',
+          'Все соприкасающиеся постройки подсветятся фиолетовым контуром.',
+          'Перетащите весь квартал на новое место и отпустите ЛКМ.'
+        ]
+      },
+      'tool-delete_type': {
+        icon: 'fa-solid fa-broom text-rose-400',
+        title: 'Инструмент «Тип» (Массовое удаление вида)',
+        shortcut: 'Клавиша T / Del',
+        desc: 'В один клик удаляет со всей карты острова абсолютно все постройки того вида, по которому вы кликнули.',
+        steps: [
+          'Включите инструмент «Тип» (курсор на карте станет красным).',
+          'Кликните ЛКМ по любому объекту на карте (например, по «Сосне-1» или «Мраморному забору»).',
+          'Все объекты этого же типа мгновенно очистятся со всего острова.'
+        ]
+      },
+      'tool-erase': {
+        icon: 'fa-solid fa-eraser text-slate-200',
+        title: 'Инструмент «Ластик» (Точечное удаление)',
+        shortcut: 'Клавиша E',
+        desc: 'Удаляет отдельные здания, дороги или деревья по одному или полосой.',
+        steps: [
+          'Кликните ЛКМ по объекту на карте, чтобы убрать его.',
+          'Или зажмите ЛКМ и проведите курсором по карте для быстрой расчистки участка.'
+        ]
+      },
+      'tool-fill': {
+        icon: 'fa-solid fa-fill-drip text-sky-400',
+        title: 'Инструмент «Заливка» (Заливка контура 1×1)',
+        shortcut: 'Клавиша G',
+        desc: 'Заполняет пустую замкнутую территорию выбранным объектом размером 1×1 (как заливка в графическом редакторе).',
+        steps: [
+          'Выберите в каталоге любой предмет размером <b>1×1</b> (воду, каменную кладку, клумбу или дерево).',
+          'Кликните ЛКМ на любую пустую клетку внутри огороженного контура.',
+          'Алгоритм автоматически заполнит всю пустоту внутри границ (до 1500 клеток за раз).'
+        ]
+      },
+
+      // --- 4. ПОВЕРХ И СИММЕТРИЯ ---
+      'overwriteToggle': {
+        icon: 'fa-solid fa-layer-group text-sky-400',
+        title: 'Режим замены «Поверх»',
+        shortcut: 'Переключатель',
+        desc: 'Определяет, будут ли новые постройки заменять старые объекты под собой.',
+        steps: [
+          '<b>Галочка включена:</b> новая постройка автоматически удаляет старые объекты, оказавшиеся под её фундаментом.',
+          '<b>Галочка снята:</b> безопасный режим — постройка установится только на полностью свободные клетки.'
+        ]
+      },
+      'sym-none': {
+        icon: 'fa-solid fa-Vector-square text-purple-400',
+        title: 'Симметрия: 1× (Выключена)',
+        shortcut: 'Обычный режим',
+        desc: 'Стандартный режим строительства без зеркального дублирования — объекты ставятся только там, где вы кликаете.',
+        steps: [
+          'Используйте для точечной расстановки уникальных зданий (лимит 1 шт.) и асимметричных деталей.'
+        ]
+      },
+      'sym-x': {
+        icon: 'fa-solid fa-arrows-left-right text-purple-400',
+        title: 'Симметрия: Зеркало X (Горизонтальная)',
+        shortcut: 'Ось X = 31',
+        desc: 'Автоматически дублирует каждую ставящуюся постройку зеркально вдоль оси X (Запад ↔ Восток).',
+        steps: [
+          'Поставьте дорогу, забор, дерево или парное здание на одной половине острова — вторая копия синхронно появится на противоположной стороне.',
+          'Работает для Кисти, Зоны, Рамки, Линии и Заливки.'
+        ]
+      },
+      'sym-y': {
+        icon: 'fa-solid fa-arrows-up-down text-purple-400',
+        title: 'Симметрия: Зеркало Y (Вертикальная)',
+        shortcut: 'Ось Y = 31',
+        desc: 'Автоматически дублирует каждую ставящуюся постройку зеркально вдоль оси Y (Север ↔ Юг).',
+        steps: [
+          'Идеально для симметричного оформления северного и южного секторов острова.'
+        ]
+      },
+      'sym-quad': {
+        icon: 'fa-solid fa-border-all text-purple-400',
+        title: 'Симметрия: 4×Квадр (На 4 стороны)',
+        shortcut: '4 квадранта сразу',
+        desc: 'Мгновенно отзеркаливает дороги, заборы, клумбы, воду и лес сразу во все 4 угла (квадранта) острова.',
+        steps: [
+          'Стройте узор в одном секторе — студия автоматически повторит его в остальных трёх секторах относительно центра острова (31:31).'
+        ]
+      },
+
+      // --- 5. ПРАВЫЙ БЛОК ШАПКИ (ИНСТРУКЦИЯ, ПРОЕКТЫ, PNG, ПАСПОРТ) ---
+      'helpLinkBtn': {
+        icon: 'fa-solid fa-circle-question text-indigo-400',
+        title: 'Полное руководство пользователя',
+        shortcut: 'Новая вкладка',
+        desc: 'Открывает подробный иллюстрированный справочник по всем режимам, соединениям дорог и секретам студии в соседней вкладке.',
+        steps: [
+          'Ваша текущая работа на карте сохраняется и не прерывается — справочник откроется параллельно.'
+        ]
+      },
+      'openSlotsModal': {
+        icon: 'fa-solid fa-floppy-disk text-sky-400',
+        title: 'Менеджер Проектов и обмен .JSON',
+        shortcut: 'Сохранение / Обмен',
+        desc: 'Позволяет сохранять разные варианты планировки в браузере, а также скачивать и загружать файлы проектов (.JSON).',
+        steps: [
+          '<b>Сохранить в браузере:</b> введите название и нажмите «Сохранить» — проект появится в списке слотов и в верхнем меню со звёздочкой ★.',
+          '<b>Скачать .JSON:</b> сохраняет всю вашу планировку в лёгкий файл для резервной копии или отправки друзьям в Telegram/ВК/Discord.',
+          '<b>Загрузить .JSON:</b> открывает присланный другом файл планировки на вашем экране.'
+        ]
+      },
+      'exportCanvasPNG': {
+        icon: 'fa-solid fa-camera text-emerald-400',
+        title: 'Скачать полную карту в Ultra-HD (.PNG)',
+        shortcut: 'Рендер 3920×2920',
+        desc: 'В один клик создаёт и скачивает детализированное изображение всего вашего острова 60×60 в максимальном разрешении.',
+        steps: [
+          'Не зависит от того, насколько сильно вы приблизили или сдвинули камеру на экране.',
+          'В левом верхнем углу рендера автоматически печатается карточка проекта с количеством занятых клеток и общим Процветанием.'
+        ]
+      },
+      'openPassportModal': {
+        icon: 'fa-solid fa-file-contract text-amber-400',
+        title: 'Инженерный Паспорт и Матрица Координат',
+        shortcut: 'Спецификация X/Y',
+        desc: 'Формирует полную текстовую сводку вашей застройки со списком всех зданий, лимитов и точными координатами X/Y каждого объекта.',
+        steps: [
+          'Разверните пункт «3. Матрица координат построек», чтобы увидеть точные адреса X и Y.',
+          'Нажмите <b>«Копировать»</b> или скачайте файл <b>«.MD»</b> для удобного просмотра при переносе в игру.'
+        ]
+      },
+
+      // --- 6. ЛЕВАЯ ПАНЕЛЬ (КАТАЛОГ, ПОИСК, ФИЛЬТРЫ) ---
+      'activeItemBanner': {
+        icon: 'fa-solid fa-cube text-sky-400',
+        title: 'Активная постройка в кисти',
+        shortcut: 'Текущий выбор',
+        desc: 'Показывает объект, которым вы сейчас строите, его текущий размер на сетке и количество уже установленных копий.',
+        steps: [
+          'Для асимметричных построек (5×3) справа появляется кнопка поворота <b>5×3 ↔ 3×5</b> (также работает по клавише <b>Пробел</b>).',
+          'Чтобы быстро выбрать любую постройку прямо с карты, кликните по ней <b>колёсиком мыши (СКМ)</b> или <b>Alt + ЛКМ</b> (Пипетка).'
+        ]
+      },
+      'toggleBuildingRotation': {
+        icon: 'fa-solid fa-rotate text-amber-400',
+        title: 'Повернуть постройку (5×3 ↔ 3×5)',
+        shortcut: 'Клавиша Пробел',
+        desc: 'Меняет ориентацию асимметричной постройки с горизонтальной (5×3) на вертикальную (3×5) и обратно.',
+        steps: [
+          'Можно поворачивать заранее в каталоге, прямо во время перетаскивания зажатой ЛКМ или наведя курсор на уже стоящее здание и нажав <b>Пробел</b>.'
+        ]
+      },
+      'catalogSearch': {
+        icon: 'fa-solid fa-magnifying-glass text-sky-400',
+        title: 'Быстрый поиск постройки',
+        shortcut: 'Фильтр по названию',
+        desc: 'Мгновенно находит нужное здание, декор или дорожку среди всех 84 объектов каталога.',
+        steps: [
+          'Начните вводить название (например, «замок», «бассейн», «сосна») — список отфильтруется на лету.',
+          'Нажмите крестик справа в поле ввода, чтобы сбросить поиск.'
+        ]
+      },
+      'onlyAvailableBtn': {
+        icon: 'fa-solid fa-filter text-emerald-400',
+        title: 'Фильтр «Доступные» (Неисчерпанный лимит)',
+        shortcut: 'Умный фильтр',
+        desc: 'Скрывает из каталога все здания, лимит которых уже полностью выставлен на карту.',
+        steps: [
+          'Нажмите кнопку (она загорится изумрудным цветом) — в списке останутся только те постройки, которые ещё можно поставить.',
+          'Повторное нажатие возвращает показ всех 84 объектов.'
+        ]
+      },
+
+      // --- 7. ВЕРХНЯЯ ПАНЕЛЬ НАД КАРТОЙ (СКРЫТИЕ МЕНЮ, HUD, ОТМЕНА, СЛОИ, ЧЕКБОКСЫ) ---
+      'toggleLeftSidebarBtn': {
+        icon: 'fa-solid fa-angles-left text-sky-400',
+        title: 'Скрыть / Показать левый каталог',
+        shortcut: 'Клавиша [ (Х)',
+        desc: 'Сворачивает или разворачивает левую панель каталога построек, расширяя рабочее поле карты.',
+        steps: [
+          'Удобно скрывать каталог при переносе готовой карты в игру в режимах «Изоляция» и «Прораб».'
+        ]
+      },
+      'toggleRightSidebarBtn': {
+        icon: 'fa-solid fa-angles-right text-sky-400',
+        title: 'Скрыть / Показать правую панель',
+        shortcut: 'Клавиша ] (Ъ)',
+        desc: 'Сворачивает или разворачивает правую панель статистики и чек-листа для максимального обзора острова.',
+        steps: [
+          'Если скрыть обе боковые панели (клавиши <b>[</b> и <b>]</b>), карта острова займёт 100% ширины вашего монитора.'
+        ]
+      },
+      'hudPanel': {
+        icon: 'fa-solid fa-location-crosshairs text-sky-400',
+        title: 'Индикатор координат и клетки под курсором',
+        shortcut: 'Живой радар X/Y',
+        desc: 'Показывает точные координаты X и Y текущей клетки, название и размер стоящей постройки, а также длину непрерывных линий.',
+        steps: [
+          'При наведении на дорожку, воду или забор 1×1 автоматически считает и пишет длину прямой линии по осям X и Y.'
+        ]
+      },
+      'undoBtn': {
+        icon: 'fa-solid fa-rotate-left text-sky-400',
+        title: 'Отменить последнее действие',
+        shortcut: 'Ctrl + Z',
+        desc: 'Откатывает последнее изменение на карте на один шаг назад (хранит до 35 шагов истории).',
+        steps: [
+          'Отменяет постройку, удаление, перенос зоны, авто-лес или разворот здания.',
+          'Горячая клавиша <b>Ctrl + Z</b> работает на любой раскладке клавиатуры.'
+        ]
+      },
+      'redoBtn': {
+        icon: 'fa-solid fa-rotate-right text-sky-400',
+        title: 'Повторить отменённое действие',
+        shortcut: 'Ctrl + Y / Ctrl+Shift+Z',
+        desc: 'Возвращает действие, которое было отменено кнопкой «Отменить».',
+        steps: [
+          'Работает по клику или горячим клавишам <b>Ctrl + Y</b> и <b>Ctrl + Shift + Z</b>.'
+        ]
+      },
+      'layer-btn-buildings': {
+        icon: 'fa-solid fa-Chess-rook text-amber-400',
+        title: 'Слой 1: Крупные и средние здания',
+        shortcut: 'Фильтр видимости',
+        desc: 'Включает или временно скрывает на карте все основные здания из магазина и ивентов (5×5, 5×3, 4×4, 3×3, 2×2 и лимитные 1×1).',
+        steps: [
+          'Отключите этот слой, если высокие башни («Дерево жизни», «Снежный замок») загораживают дорожки позади себя.'
+        ]
+      },
+      'layer-btn-roads': {
+        icon: 'fa-solid fa-road text-slate-300',
+        title: 'Слой 2: Дорожки и тротуары',
+        shortcut: 'Фильтр видимости',
+        desc: 'Показывает или скрывает все 5 видов дорожных покрытий (тротуары, тропы и праздничную каменную кладку).',
+        steps: [
+          'Нажмите кнопку «Скрыть» справа на панели слоёв, а затем включите только «2. Дорожки», чтобы видеть чистый дорожный каркас города.'
+        ]
+      },
+      'layer-btn-water': {
+        icon: 'fa-solid fa-water text-sky-400',
+        title: 'Слой 3: Вода (Бассейн с подогревом)',
+        shortcut: 'Фильтр видимости',
+        desc: 'Показывает или скрывает все водные каналы, озёра и бассейны с подогревом.',
+        steps: [
+          'Позволяет отдельно проверить контуры всех водоёмов без окружающего декора и леса.'
+        ]
+      },
+      'layer-btn-fences': {
+        icon: 'fa-solid fa-dungeon text-orange-400',
+        title: 'Слой 4: Заборы и живые изгороди',
+        shortcut: 'Фильтр видимости',
+        desc: 'Показывает или скрывает мраморные заборы, палисады, свет в ночи и соединяемые живые изгороди.',
+        steps: [
+          'Удобно включать отдельно при возведении стен и ограждений кварталов в игре.'
+        ]
+      },
+      'layer-btn-flora': {
+        icon: 'fa-solid fa-fan text-pink-400',
+        title: 'Слой 5: Цветочные клумбы и розарии',
+        shortcut: 'Фильтр видимости',
+        desc: 'Показывает или скрывает соединяемые цветочные дорожки и клумбы («Путь цветка», «Песнь солнца», «Серенада роз» и др.).',
+        steps: [
+          'Помогает легко перенести цветочные узоры и резервные клумбы 3×3.'
+        ]
+      },
+      'layer-btn-decor': {
+        icon: 'fa-solid fa-lightbulb text-purple-400',
+        title: 'Слой 6: Мелкий декор (1×1)',
+        shortcut: 'Фильтр видимости',
+        desc: 'Показывает или скрывает одиночный декор: уличные фонари, скамейки, качели, костры, иглу и снеговиков.',
+        steps: [
+          'Отключайте на первом этапе стройки, чтобы мелкие предметы не отвлекали при разметке дорог.'
+        ]
+      },
+      'layer-btn-forest': {
+        icon: 'fa-solid fa-tree text-emerald-400',
+        title: 'Слой 7: Лес и деревья',
+        shortcut: 'Фильтр видимости',
+        desc: 'Показывает или скрывает все 7 видов деревьев (Сосны 1–5, Морозное дерево и Снежную рощу).',
+        steps: [
+          'Скройте лес в один клик, чтобы деревья не закрывали обзор при расстановке зданий и прокладке дорог.'
+        ]
+      },
+      'layersShowAllBtn': {
+        icon: 'fa-solid fa-eye text-sky-400',
+        title: 'Показать все 7 слоёв',
+        shortcut: 'Полный обзор',
+        desc: 'Мгновенно включает отображение всех 7 слоёв карты и отключает режим изоляции.',
+        steps: [
+          'Нажмите, чтобы вернуть полную картину застройки острова.'
+        ]
+      },
+      'layersHideAllBtn': {
+        icon: 'fa-solid fa-eye-slash text-slate-400',
+        title: 'Скрыть все слои (Чистое поле)',
+        shortcut: 'Поэтапная сборка',
+        desc: 'Выключает сразу все 7 слоёв, оставляя пустую размеченную сетку 60×60.',
+        steps: [
+          'Нажмите <b>«Скрыть»</b>, а затем включите только один нужный слой (например, «3. Вода» или «4. Заборы»), чтобы переносить карту в игру по этапам!'
+        ]
+      },
+      'showGridCheck': {
+        icon: 'fa-solid fa-border-none text-sky-400',
+        title: 'Разметка сетки 60×60 и координаты по краям',
+        shortcut: 'Чекбокс вида',
+        desc: 'Отображает клеточную сетку острова с выделением каждых 5 и 10 клеток и подписями координат X:5..60 и Y:5..60 по периметру.',
+        steps: [
+          'Позволяет легко ориентироваться в рядах и столбцах при строительстве.'
+        ]
+      },
+      'showAxesCheck': {
+        icon: 'fa-solid fa-plus text-purple-400',
+        title: 'Центральные оси симметрии (X=31, Y=31)',
+        shortcut: 'Чекбокс вида',
+        desc: 'Подсвечивает главные осевые линии, делящие остров 60×60 ровно на 4 квадранта (Север, Запад, Юг, Восток).',
+        steps: [
+          'Незаменимо для центровки «Дерева жизни» и проверки зеркальной симметрии.'
+        ]
+      },
+      'showLabelsCheck': {
+        icon: 'fa-solid fa-tag text-amber-400',
+        title: 'Названия построек на карте',
+        shortcut: 'Чекбокс вида',
+        desc: 'Отображает текстовые подписи с названиями зданий поверх их изометрических текстур.',
+        steps: [
+          'Отключите галочку, если хотите полюбоваться чистой графикой города без текста.'
+        ]
+      },
+      'showBuiltMarksCheck': {
+        icon: 'fa-solid fa-check-double text-emerald-400',
+        title: 'Отображение отметок Прораба (✓)',
+        shortcut: 'Чекбокс вида',
+        desc: 'Показывает или временно скрывает зелёные галочки ✓ на постройках, которые вы отметили в режиме «Прораб».',
+        steps: [
+          'При снятии галочки сами отметки не удаляются из памяти — они просто скрываются с экрана.'
+        ]
+      },
+      'showReservesCheck': {
+        icon: 'fa-solid fa-vector-square text-rose-400',
+        title: 'Подсветка резервных площадок 3×3',
+        shortcut: 'Секрет «Серенады роз»',
+        desc: 'Обводит розовым пунктиром квадраты 3×3 из клумбы «Серенада роз», зарезервированные под будущие ивентовые здания.',
+        steps: [
+          'Чтобы создать такую резервную зону, выложите квадрат 3×3 из клумбы «Серенада роз» (до 6 резервов на карте).'
+        ]
+      },
+      'shareUrlHeaderBtn': {
+        icon: 'fa-solid fa-link text-sky-400',
+        title: 'Поделиться проектом по прямой ссылке',
+        shortcut: 'Обмен в 1 клик',
+        desc: 'Упаковывает всю вашу карту 60×60 (со всеми зданиями, дорогами, лесом и отметками Прораба ✓) прямо в компактную веб-ссылку и копирует её в буфер обмена.',
+        steps: [
+          'Нажмите кнопку <b>«Ссылка»</b> — готовая ссылка сразу скопируется в буфер обмена.',
+          'Отправьте её другу в Telegram, ВК или Discord (без пересылки файлов .JSON).',
+          'Когда друг перейдёт по вашей ссылке, у него в студии автоматически откроется ваш остров!'
+        ]
+      },
+      'showSoundCheck': {
+        icon: 'fa-solid fa-volume-high text-amber-400',
+        title: 'Тактильные звуковые эффекты (Web Audio)',
+        shortcut: 'Звук 🔊',
+        desc: 'Включает мягкий синтезированный звуковой отклик при установке зданий, рисовании дорожек, удалении объектов и отметке галочек Прораба ✓.',
+        steps: [
+          'Работает без внешних аудиофайлов (генерируется прямо в браузере).',
+          'Снимите галочку в любой момент для полностью бесшумной работы.'
+        ]
+      },
+      'showFxCheck': {
+        icon: 'fa-solid fa-snowflake text-cyan-300',
+        title: 'Живые визуальные эффекты (Снег и Вода)',
+        shortcut: 'Атмосфера ❄️',
+        desc: 'Включает ненавязчивые атмосферные эффекты: лёгкий падающий снег над островом, живое мерцание воды в бассейнах и мягкий световой импульс при установке построек.',
+        steps: [
+          'Эффекты полупрозрачны и автоматически отключаются в режиме «Изоляция» и при скачивании рендера PNG.',
+          'Снимите галочку в любой момент, если хотите абсолютно статичную чертёжную сетку.'
+        ]
+      },
+      'showTooltipsCheck': {
+        icon: 'fa-solid fa-lightbulb text-sky-400',
+        title: 'Всплывающие карточки-инструкции',
+        shortcut: 'Обучающий режим',
+        desc: 'Включает или отключает подробные всплывающие инструкции при наведении курсора на кнопки студии.',
+        steps: [
+          'Оставьте включённым, чтобы в любой момент видеть подсказки и горячие клавиши по каждому инструменту.'
+        ]
+      },
+
+      // --- 8. НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ И МАСШТАБА ---
+      'navFullIsland': {
+        icon: 'fa-solid fa-expand text-sky-400',
+        title: 'Показать весь остров целиком',
+        shortcut: 'Полный обзор 60×60',
+        desc: 'Автоматически подбирает масштаб и центрирует камеру так, чтобы весь ромб острова поместился на вашем экране.',
+        steps: [
+          'Учитывает открытые или скрытые боковые панели.'
+        ]
+      },
+      'navNorth': {
+        icon: 'fa-solid fa-compass text-indigo-400',
+        title: 'Приблизить Северный сектор (С)',
+        shortcut: 'Квадрант X:1..30, Y:1..30',
+        desc: 'Мгновенно фокусирует камеру на верхней (Северной) четверти острова.',
+        steps: ['Удобно для детальной застройки северного бастиона и замковой зоны.']
+      },
+      'navWest': {
+        icon: 'fa-solid fa-compass text-emerald-400',
+        title: 'Приблизить Западный сектор (З)',
+        shortcut: 'Квадрант X:1..30, Y:31..60',
+        desc: 'Мгновенно фокусирует камеру на левой (Западной) четверти острова.',
+        steps: ['Позволяет быстро перейти к западному крылу планировки.']
+      },
+      'navSouth': {
+        icon: 'fa-solid fa-compass text-cyan-400',
+        title: 'Приблизить Южный сектор (Ю)',
+        shortcut: 'Квадрант X:31..60, Y:31..60',
+        desc: 'Мгновенно фокусирует камеру на нижней (Южной) прибрежной четверти острова.',
+        steps: ['Идеально для работы над гаванью, рынком и морским фортом.']
+      },
+      'navEast': {
+        icon: 'fa-solid fa-compass text-amber-400',
+        title: 'Приблизить Восточный сектор (В)',
+        shortcut: 'Квадрант X:31..60, Y:1..30',
+        desc: 'Мгновенно фокусирует камеру на правой (Восточной) четверти острова.',
+        steps: ['Позволяет в один клик перелететь к восточному кварталу.']
+      },
+      'myViewBtn': {
+        icon: 'fa-solid fa-crosshairs text-purple-400',
+        title: 'Перейти к ракурсу «Мой вид»',
+        shortcut: 'Быстрая закладка камеры',
+        desc: 'Возвращает камеру и масштаб ровно к тому участку карты, который вы сохранили кнопкой с закладкой.',
+        steps: [
+          'Сначала настройте удобный зум на нужном квартале и нажмите иконку закладки справа от этой кнопки.',
+          'После этого кнопка «Мой вид» станет активной и будет возвращать вас сюда в один клик.'
+        ]
+      },
+      'saveCustomView': {
+        icon: 'fa-solid fa-bookmark text-amber-400',
+        title: 'Запомнить текущий ракурс камеры',
+        shortcut: 'Сохранить «Мой вид»',
+        desc: 'Сохраняет текущее положение камеры и процент зума в память браузера для кнопки «Мой вид».',
+        steps: [
+          'Наведите камеру на участок, который сейчас активно строите, и нажмите эту кнопку-закладку.'
+        ]
+      },
+      'zoomOutBtn': {
+        icon: 'fa-solid fa-minus text-sky-400',
+        title: 'Отдалить карту (-20%)',
+        shortcut: 'Колёсико мыши вниз',
+        desc: 'Уменьшает масштаб отображения карты (доступный диапазон: от 15% до 350%).',
+        steps: [
+          'Совет: прокрутка колёсика мыши приближает и отдаляет карту точно в точку под вашим курсором!'
+        ]
+      },
+      'zoomInBtn': {
+        icon: 'fa-solid fa-plus text-sky-400',
+        title: 'Приблизить карту (+25%)',
+        shortcut: 'Колёсико мыши вверх',
+        desc: 'Увеличивает масштаб карты для детальной работы с мелкими клетками и координатами.',
+        steps: [
+          'При приближении от 65% и выше в режиме Изоляции на каждой клетке дорожек автоматически появляются точные координаты X:Y.'
+        ]
+      },
+      'resetCameraBtn': {
+        icon: 'fa-solid fa-rotate text-slate-300',
+        title: 'Сбросить камеру и масштаб',
+        shortcut: 'Центровка 60×60',
+        desc: 'Возвращает камеру в стандартное центральное положение, показывая весь остров целиком.',
+        steps: ['Используйте, если увели карту далеко в сторону правым кликом мыши.']
+      },
+
+      // --- 9. ПРАВАЯ ПАНЕЛЬ (СТАТИСТИКА, 4 КНОПКИ ЛЕСА, ЧЕК-ЛИСТ И БАФФЫ) ---
+      'tool-forest_fill_area': {
+        icon: 'fa-solid fa-tree text-emerald-400',
+        title: 'Авто-лес замкнутой области (Точечно)',
+        shortcut: 'Клик внутрь контура',
+        desc: 'Засаживает красивым случайным миксом из 7 видов деревьев ТОЛЬКО выбранный замкнутый участок (двор или сектор).',
+        steps: [
+          '1. Нажмите эту кнопку (она включится как активный инструмент).',
+          '2. <b>Кликните ЛКМ на любую пустую клетку</b> внутри огороженного забором или дорогой участка на карте.',
+          '3. Лес заполнит только эту пустоту, не выходя за границы контура!'
+        ]
+      },
+      'tool-forest_clear_area': {
+        icon: 'fa-solid fa-axe text-rose-400',
+        title: 'Срубить лес замкнутой области (Точечно)',
+        shortcut: 'Клик по лесу в контуре',
+        desc: 'Вырубает деревья ТОЛЬКО внутри выбранного огороженного участка, не трогая лес на остальном острове.',
+        steps: [
+          '1. Нажмите эту кнопку для включения режима локальной вырубки.',
+          '2. <b>Кликните ЛКМ по дереву</b> внутри нужного сектора на карте — весь лес в пределах этого контура будет очищен.'
+        ]
+      },
+      'autoFillEmptyWithForest': {
+        icon: 'fa-solid fa-tree text-emerald-300',
+        title: 'Авто-лес пустот (На весь остров сразу)',
+        shortcut: 'Мгновенное действие',
+        desc: 'В один клик заполняет абсолютно все оставшиеся пустые клетки острова (из 3600) случайными деревьями в пределах лимитов.',
+        steps: [
+          'Срабатывает мгновенно при нажатии на кнопку (кликать по карте не нужно).',
+          'Ни одно здание, дорога или декор при этом не задеваются.'
+        ]
+      },
+      'clearAllForestBtn': {
+        icon: 'fa-solid fa-trash-can text-rose-300',
+        title: 'Срубить весь лес (Очистить остров от деревьев)',
+        shortcut: 'Мгновенное действие',
+        desc: 'За одну секунду удаляет со всей карты острова все 7 видов деревьев (Сосны 1–5, Морозное дерево и Снежную рощу).',
+        steps: [
+          'Все здания, дороги, заборы, вода и клумбы остаются нетронутыми.'
+        ]
+      },
+      'rtab-audit': {
+        icon: 'fa-solid fa-list-check text-sky-400',
+        title: 'Интерактивный Чек-лист построек (59)',
+        shortcut: 'Поиск и выбор зданий',
+        desc: 'Список всех уникальных и лимитных построек, разделённый на «Установленные» (✓) и «Не использовано» (!).',
+        steps: [
+          '<b>Клик по установленному зданию (✓):</b> камера сама найдёт его на карте и плавно перелетит к нему!',
+          '<b>Клик по неиспользованному зданию (!):</b> сразу выбирает эту постройку в каталоге и включает режим «Строить».'
+        ]
+      },
+      'rtab-buffs': {
+        icon: 'fa-solid fa-bolt text-amber-400',
+        title: 'Сводка активных баффов острова',
+        shortcut: 'Бонусы построек',
+        desc: 'Показывает суммарный список всех боевых и экономических бонусов от зданий, установленных сейчас на карте.',
+        steps: [
+          'Позволяет проверить наличие всех баффов на атаку/защиту войск, пехоту, стрелков, копейщиков и скорость развития.'
+        ]
+      }
+    ,
+
+      // --- 10. КНОПКИ ВСПЛЫВАЮЩИХ БАННЕРОВ И МОДАЛЬНЫХ ОКОН ---
+      'markVisibleBuiltTrue': {
+        icon: 'fa-solid fa-check-double text-emerald-400',
+        title: 'Отметить все видимые постройки (✓)',
+        shortcut: 'Массовая отметка',
+        desc: 'Ставит зелёную галочку Прораба ✓ сразу на все постройки, которые сейчас видны на карте (с учётом выбранных слоёв или изоляции).',
+        steps: ['Удобно, если вы изолировали один тип зданий и уже перенесли всю эту группу в игру.']
+      },
+      'markVisibleBuiltFalse': {
+        icon: 'fa-solid fa-eraser text-slate-300',
+        title: 'Снять отметки с видимых построек',
+        shortcut: 'Очистка текущего слоя',
+        desc: 'Убирает зелёные галочки ✓ только с тех объектов, которые сейчас отображаются на экране.',
+        steps: ['Отметки на скрытых слоях останутся нетронутыми.']
+      },
+      'resetAllBuiltMarks': {
+        icon: 'fa-solid fa-rotate-left text-rose-400',
+        title: 'Сбросить все отметки Прораба',
+        shortcut: 'Полный сброс ✓',
+        desc: 'Полностью очищает все зелёные галочки ✓ со всех 3600 клеток острова.',
+        steps: ['Используйте перед началом нового переноса карты с нуля.']
+      },
+      'clearIsolationMode': {
+        icon: 'fa-solid fa-eye-slash text-rose-400',
+        title: 'Выйти из режима Изоляции',
+        shortcut: 'Клавиша Esc / I',
+        desc: 'Отключает изоляцию одного объекта и возвращает на экран все остальные постройки острова.',
+        steps: ['Также можно в любой момент нажать клавишу <b>Esc</b> на клавиатуре.']
+      },
+      'copyPassportText': {
+        icon: 'fa-regular fa-copy text-sky-400',
+        title: 'Скопировать Инженерный Паспорт',
+        shortcut: 'В буфер обмена',
+        desc: 'Копирует весь текст паспорта вместе со списком зданий и матрицей координат X/Y в буфер обмена.',
+        steps: ['После нажатия вы можете сразу вставить (Ctrl+V) список в заметки или мессенджер.']
+      },
+      'downloadPassportMarkdown': {
+        icon: 'fa-solid fa-download text-emerald-400',
+        title: 'Скачать паспорт файлом (.MD)',
+        shortcut: 'Текстовый файл',
+        desc: 'Сохраняет полную спецификацию и матрицу координат вашего проекта в виде файла Markdown (.MD).',
+        steps: ['Открывается любым текстовым редактором или блокнотом.']
+      },
+      'saveToLocalSlot': {
+        icon: 'fa-solid fa-floppy-disk text-sky-400',
+        title: 'Сохранить проект в память браузера',
+        shortcut: 'Новый слот ★',
+        desc: 'Сохраняет текущую планировку под указанным именем в локальное хранилище браузера.',
+        steps: [
+          'Проект появится в списке слотов ниже, а также в верхнем меню шапки со звёздочкой ★.'
+        ]
+      },
+      'exportProjectJSON': {
+        icon: 'fa-solid fa-file-arrow-down text-sky-400',
+        title: 'Скачать файл проекта (.JSON)',
+        shortcut: 'Экспорт схемы',
+        desc: 'Сохраняет всю вашу планировку (со всеми координатами и отметками Прораба ✓) в файл .JSON на устройство.',
+        steps: [
+          'Отправьте этот файл другу, чтобы он открыл вашу застройку у себя в студии через кнопку «Загрузить .JSON».'
+        ]
+      },
+      'importProjectJSON': {
+        icon: 'fa-solid fa-file-arrow-up text-amber-400',
+        title: 'Загрузить файл проекта (.JSON)',
+        shortcut: 'Импорт схемы',
+        desc: 'Загружает ранее сохранённый или присланный другом файл планировки (.JSON) прямо на карту студии.',
+        steps: ['Выберите файл .JSON на компьютере или телефоне — карта мгновенно обновится.']
+      },
+      'statCellsBox': {
+        icon: 'fa-solid fa-chart-pie text-sky-400',
+        title: 'Шкала занятости сетки (3600 клеток)',
+        shortcut: 'Аудит площади',
+        desc: 'В реальном времени считает количество занятых и свободных клеток острова по трём категориям.',
+        steps: [
+          '<b>Здания (жёлтый):</b> площадь под уникальными, лимитными постройками и декором.',
+          '<b>Сети (голубой):</b> дорожки, вода, заборы и цветочные клумбы.',
+          '<b>Лес (зелёный):</b> все 7 видов деревьев.'
+        ]
+      },
+      'statProsperityBox': {
+        icon: 'fa-solid fa-crown text-amber-400',
+        title: 'Суммарное Процветание острова',
+        shortcut: 'Экономический рейтинг',
+        desc: 'Автоматически суммирует бонус Процветания от всех размещённых на карте зданий и декора.',
+        steps: [
+          'Ниже указано количество уже выставленных уникальных зданий из 39 основных.'
+        ]
+      }
+    };
+
+    const CATEGORY_FILTER_HELP = {
+      'all': {
+        title: 'Категория: Все объекты (84)',
+        desc: 'Показывает полный каталог из всех 84 доступных построек, дорожек, декора и деревьев.',
+        steps: ['Используйте поиск выше или кнопку «Доступные» для фильтрации по остатку лимита.']
+      },
+      'Мифические': {
+        title: 'Категория: Мифические постройки (20)',
+        desc: 'Главные здания острова («Дерево жизни», «Снежный замок», «Плавучий рынок», «Яростный морской форт» и ивентовые постройки).',
+        steps: [
+          'Дают максимальный прирост Процветания (до +2000) и ключевые боевые баффы (+1%..2% к атаке и защите войск).',
+          'Лимит каждого здания — 1 шт. на остров.'
+        ]
+      },
+      'Великие': {
+        title: 'Категория: Великие постройки (7)',
+        desc: 'Важные архитектурные здания 3×3 («Деревенская мельница», «Хрустальный сад», «Теплица», «Дубовая таверна» и др.).',
+        steps: [
+          'Каждое здание даёт +500 Процветания и полезные бонусы к характеристикам пехоты, стрелков, копейщиков и стройке.'
+        ]
+      },
+      'Редкие': {
+        title: 'Категория: Редкие постройки (12)',
+        desc: 'Производственные и городские здания 3×3 и 2×2 («Шумный базар», «Кузнец», «Пивоварня», «Базовый док», «Фонтан радости» и др.).',
+        steps: [
+          'Дают по +200 Процветания и ускоряют сбор ресурсов, исследования, лечение и скорость марша.'
+        ]
+      },
+      'Необычные': {
+        title: 'Категория: Необычные постройки (9)',
+        desc: 'Парные и квартальные постройки 2×2 и 1×1 («Базовый дом фермера», «Караван торговцев», «Флаг воина», а также «Бассейн с подогревом»).',
+        steps: [
+          'Имеют лимит от 2 до 5 шт., поэтому отлично подходят для симметричного оформления секторов.'
+        ]
+      },
+      'Декор': {
+        title: 'Категория: Городской декор 1×1 (11)',
+        desc: 'Одиночные элементы благоустройства: уличные фонари (до 199 шт.), скамейки, качели, столы, палатки, костры, иглу и снеговики.',
+        steps: [
+          'Используются для детального украшения площадей, набережных и парковых аллей.'
+        ]
+      },
+      'Дороги': {
+        title: 'Категория: Соединяемые дороги, вода, заборы и цветы (19)',
+        desc: 'Все объекты 1×1 с умным авто-соединением: тротуары, тропы, бассейны с подогревом, цветочные бордюры, изгороди и заборы.',
+        steps: [
+          'При установке рядом друг с другом автоматически сливаются в <b>скруглённые уголки (из 3 клеток)</b> и <b>монолитные площадки 2×2 (_block)</b>!',
+          'Квадрат 3×3 из «Серенады роз» автоматически помечается как резерв под будущие ивенты.'
+        ]
+      },
+      'Лес': {
+        title: 'Категория: Растительность и лес (7)',
+        desc: 'Семь видов деревьев 1×1 (Сосны 1–5, Морозное дерево и Снежная роща) с лимитом по 499 шт.',
+        steps: [
+          'Можно сажать вручную кистью или автоматически заполнять пустоты кнопками «Авто-лес» в правой панели.'
+        ]
+      }
+    };
+
+    function resolveSmartTooltipData(el) {
+      if (!el || el === document.body || el === document.documentElement) return null;
+
+      // 1. Проверяем клик/наведение на карточку постройки в левом каталоге
+      const catalogCard = el.closest('.catalog-card');
+      if (catalogCard && catalogCard.id && catalogCard.id.startsWith('catalog-card-')) {
+        const itemId = Number(catalogCard.id.replace('catalog-card-', ''));
+        const it = ITEM_BY_ID[itemId];
+        if (it) {
+          const count = state.counts[it.id] || 0;
+          const rotHint = isItemRotatable(it) ? '<li>• Поддерживает поворот <b>5×3 ↔ 3×5</b> по клавише <b>Пробел</b>.</li>' : '';
+          const connHint = it.connectable ? '<li>• Автоматически соединяется с соседними клетками в углы и блоки 2×2.</li>' : '';
+          return {
+            icon: 'fa-solid fa-cube text-sky-400',
+            title: `${it.name} (${it.w}×${it.h})`,
+            shortcut: `${it.rarity} • ${count}/${it.limit}`,
+            desc: `Источник: <b>${it.type}</b> • Процветание: <b class="text-amber-300">+${it.bonus}</b> • Бафф: <b class="text-emerald-300">${it.buff}</b>`,
+            steps: [
+              'Кликните ЛКМ, чтобы выбрать эту постройку для установки на карту.',
+              ...(it.w >= 2 || it.h >= 2
+                ? ['На карте зажмите ЛКМ, наведите контур на нужные координаты X/Y и отпустите кнопку.']
+                : ['На карте зажмите ЛКМ и ведите линию, либо используйте инструменты «Зона», «Рамка» и «Заливка».']),
+              ...(isItemRotatable(it) ? ['Поддерживает разворот <b>5×3 ↔ 3×5</b> по клавише <b>Пробел</b>.'] : []),
+              ...(it.connectable ? ['Автоматически соединяется с соседними клетками того же вида в уголки и площадки 2×2.'] : [])
+            ]
+          };
+        }
+      }
+
+      // 2. Проверяем кнопки фильтра категорий в каталоге
+      const catPill = el.closest('.cat-pill');
+      if (catPill && catPill.dataset.filter) {
+        const f = catPill.dataset.filter;
+        const info = CATEGORY_FILTER_HELP[f];
+        if (info) {
+          return {
+            icon: 'fa-solid fa-layer-group text-sky-400',
+            title: info.title,
+            shortcut: 'Фильтр каталога',
+            desc: info.desc,
+            steps: info.steps
+          };
+        }
+      }
+
+      // 3. Проверяем ближайший элемент с id или onclick или label
+      const interactive = el.closest('button, a, select, input, label, [id], [onclick]');
+      if (!interactive) return null;
+
+      // Если это label с вложенным input[type="checkbox"]
+      if (interactive.tagName === 'LABEL') {
+        const chk = interactive.querySelector('input');
+        if (chk && chk.id && SMART_HELP_DICT[chk.id]) {
+          return { anchor: interactive, ...SMART_HELP_DICT[chk.id] };
+        }
+        if (interactive.getAttribute(' onchange') || interactive.querySelector('input[type="file"]')) {
+          return { anchor: interactive, ...SMART_HELP_DICT['importProjectJSON'] };
+        }
+      }
+
+      // Проверка по прямому ID
+      if (interactive.id && SMART_HELP_DICT[interactive.id]) {
+        return { anchor: interactive, ...SMART_HELP_DICT[interactive.id] };
+      }
+
+      // Проверка по родительским блокам HUD и статистики
+      if (el.closest('#hudCoords') || el.closest('#hudCellInfo')) {
+        return { anchor: el.closest('.glass-panel') || interactive, ...SMART_HELP_DICT['hudPanel'] };
+      }
+      if (el.closest('#cellsUsedText') || el.closest('#barBuildings')) {
+        return { anchor: interactive, ...SMART_HELP_DICT['statCellsBox'] };
+      }
+      if (el.closest('#statProsperity') || el.closest('#statUniquePlaced')) {
+        return { anchor: interactive, ...SMART_HELP_DICT['statProsperityBox'] };
+      }
+
+      // Проверка по атрибуту href="help.html"
+      if (interactive.tagName === 'A' && (interactive.getAttribute('href') || '').includes('help.html')) {
+        return { anchor: interactive, ...SMART_HELP_DICT['helpLinkBtn'] };
+      }
+
+      // Проверка по атрибуту onclick
+      const oc = interactive.getAttribute('onclick') || '';
+      if (oc.includes('applySelectedPreset')) return { anchor: interactive, ...SMART_HELP_DICT['applySelectedPreset'] };
+      if (oc.includes('copyShareableProjectUrl')) return { anchor: interactive, ...SMART_HELP_DICT['shareUrlHeaderBtn'] };
+      if (oc.includes('openSlotsModal')) return { anchor: interactive, ...SMART_HELP_DICT['openSlotsModal'] };
+      if (oc.includes('exportCanvasPNG')) return { anchor: interactive, ...SMART_HELP_DICT['exportCanvasPNG'] };
+      if (oc.includes('openPassportModal')) return { anchor: interactive, ...SMART_HELP_DICT['openPassportModal'] };
+      if (oc.includes('toggleBuildingRotation')) return { anchor: interactive, ...SMART_HELP_DICT['toggleBuildingRotation'] };
+      if (oc.includes('setAllLayers(true)')) return { anchor: interactive, ...SMART_HELP_DICT['layersShowAllBtn'] };
+      if (oc.includes('setAllLayers(false)')) return { anchor: interactive, ...SMART_HELP_DICT['layersHideAllBtn'] };
+      if (oc.includes('focusGridRect(1, 1, 60, 60)')) return { anchor: interactive, ...SMART_HELP_DICT['navFullIsland'] };
+      if (oc.includes('focusGridRect(1, 1, 30, 30)')) return { anchor: interactive, ...SMART_HELP_DICT['navNorth'] };
+      if (oc.includes('focusGridRect(1, 31, 30, 30)')) return { anchor: interactive, ...SMART_HELP_DICT['navWest'] };
+      if (oc.includes('focusGridRect(31, 31, 30, 30)')) return { anchor: interactive, ...SMART_HELP_DICT['navSouth'] };
+      if (oc.includes('focusGridRect(31, 1, 30, 30)')) return { anchor: interactive, ...SMART_HELP_DICT['navEast'] };
+      if (oc.includes('saveCustomView')) return { anchor: interactive, ...SMART_HELP_DICT['saveCustomView'] };
+      if (oc.includes('zoomBy(0.8)')) return { anchor: interactive, ...SMART_HELP_DICT['zoomOutBtn'] };
+      if (oc.includes('zoomBy(1.25)')) return { anchor: interactive, ...SMART_HELP_DICT['zoomInBtn'] };
+      if (oc.includes('resetCamera')) return { anchor: interactive, ...SMART_HELP_DICT['resetCameraBtn'] };
+      if (oc.includes('autoFillEmptyWithForest')) return { anchor: interactive, ...SMART_HELP_DICT['autoFillEmptyWithForest'] };
+      if (oc.includes("clearCategory('Лес')")) return { anchor: interactive, ...SMART_HELP_DICT['clearAllForestBtn'] };
+      if (oc.includes('markVisibleBuilt(true)')) return { anchor: interactive, ...SMART_HELP_DICT['markVisibleBuiltTrue'] };
+      if (oc.includes('markVisibleBuilt(false)')) return { anchor: interactive, ...SMART_HELP_DICT['markVisibleBuiltFalse'] };
+      if (oc.includes('resetAllBuiltMarks')) return { anchor: interactive, ...SMART_HELP_DICT['resetAllBuiltMarks'] };
+      if (oc.includes('clearIsolationMode')) return { anchor: interactive, ...SMART_HELP_DICT['clearIsolationMode'] };
+      if (oc.includes('copyPassportText')) return { anchor: interactive, ...SMART_HELP_DICT['copyPassportText'] };
+      if (oc.includes('downloadPassportMarkdown')) return { anchor: interactive, ...SMART_HELP_DICT['downloadPassportMarkdown'] };
+      if (oc.includes('saveToLocalSlot')) return { anchor: interactive, ...SMART_HELP_DICT['saveToLocalSlot'] };
+      if (oc.includes('exportProjectJSON')) return { anchor: interactive, ...SMART_HELP_DICT['exportProjectJSON'] };
+
+      // Динамические строки в Чек-листе справа: установленные (focusOnBuilding) и неиспользованные (selectAndSwitchToCatalogItem)
+      const focusMatch = oc.match(/focusOnBuilding\((\d+)\)/);
+      if (focusMatch) {
+        const itemId = Number(focusMatch[1]);
+        const it = ITEM_BY_ID[itemId];
+        if (it) {
+          const coords = [];
+          for (const p of state.placements.values()) {
+            if (p.itemId === itemId) coords.push(`[X:${p.x}, Y:${p.y}]`);
+          }
+          return {
+            anchor: interactive,
+            icon: 'fa-solid fa-circle-check text-emerald-400',
+            title: `${it.name} — Установлено на карте`,
+            shortcut: coords.join(', ') || `${it.w}×${it.h}`,
+            desc: `Координаты на острове: <b class="text-sky-300 font-mono">${coords.join(', ')}</b> • Бафф: <b class="text-emerald-300">${it.buff}</b>`,
+            steps: [
+              '<b>Кликните ЛКМ по этой строке</b> — камера автоматически перелетит к этому зданию и приблизит его на карте!'
+            ]
+          };
+        }
+      }
+
+      const selectMatch = oc.match(/selectAndSwitchToCatalogItem\((\d+)\)/);
+      if (selectMatch) {
+        const itemId = Number(selectMatch[1]);
+        const it = ITEM_BY_ID[itemId];
+        if (it) {
+          return {
+            anchor: interactive,
+            icon: 'fa-solid fa-circle-exclamation text-amber-400',
+            title: `${it.name} (${it.w}×${it.h}) — Ещё не установлено`,
+            shortcut: `Лимит: 0/${it.limit}`,
+            desc: `Бонус Процветания: <b class="text-amber-300">+${it.bonus}</b> • Бафф: <b class="text-emerald-300">${it.buff}</b>`,
+            steps: [
+              '<b>Кликните ЛКМ по этой строке</b> — здание сразу выберется в левом каталоге и включится инструмент «Строить».'
+            ]
+          };
+        }
+      }
+
+      return null;
+    }
+
+    function stripNativeTitles() {
+      document.querySelectorAll('[title]').forEach(el => {
+        if (el.getAttribute('title')) {
+          el.dataset.origTitle = el.getAttribute('title');
+          el.removeAttribute('title');
+        }
+      });
+    }
+
+    function toggleSmartTooltips(enabled) {
+      smartTooltipsEnabled = !!enabled;
+      localStorage.setItem('island_smart_tooltips', smartTooltipsEnabled ? '1' : '0');
+      if (!smartTooltipsEnabled) {
+        hideSmartTooltip();
+      }
+      showToast(smartTooltipsEnabled ? "Всплывающие инструкции включены" : "Всплывающие инструкции отключены");
+    }
+
+    function showSmartTooltip(anchorEl, data) {
+      const box = document.getElementById('smartHelpTooltip');
+      if (!box || !smartTooltipsEnabled || !data) return;
+
+      const stepsHtml = (data.steps && data.steps.length > 0)
+        ? `
+          <div class="mt-2 pt-2 border-t border-slate-800/90 space-y-1">
+            <div class="text-[10px] font-mono uppercase tracking-wider text-sky-400 font-bold">Как использовать:</div>
+            <ul class="space-y-1 text-[11px] text-slate-300 leading-snug">
+              ${data.steps.map(s => `<li class="flex items-start gap-1.5"><span class="text-sky-400 font-bold">•</span><span>${s}</span></li>`).join('')}
+            </ul>
+          </div>
+        `
+        : '';
+
+      box.innerHTML = `
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="w-6 h-6 rounded-lg bg-slate-900 border border-slate-700/80 flex items-center justify-center shrink-0">
+              <i class="${data.icon || 'fa-solid fa-circle-info text-sky-400'} text-xs"></i>
+            </div>
+            <div class="font-bold text-white text-xs leading-tight">${data.title}</div>
+          </div>
+          ${data.shortcut ? `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 border border-sky-500/30 text-sky-300 font-mono text-[10px] font-semibold shrink-0">${data.shortcut}</span>` : ''}
+        </div>
+        <div class="mt-1.5 text-[11px] text-slate-300 leading-relaxed">${data.desc}</div>
+        ${stepsHtml}
+      `;
+
+      box.classList.remove('hidden');
+
+      // Вычисляем умную позицию карточки, чтобы она не выходила за края экрана и не перекрывала кнопку
+      const rect = (anchorEl || document.body).getBoundingClientRect();
+      const boxW = box.offsetWidth || 340;
+      const boxH = box.offsetHeight || 160;
+      const pad = 12;
+
+      let left = rect.left + rect.width / 2 - boxW / 2;
+      let top = rect.bottom + 10;
+
+      // Если элемент находится в левом сайдбаре — открываем карточку справа от панели
+      if (anchorEl && anchorEl.closest('#leftSidebar')) {
+        left = rect.right + 12;
+        top = Math.max(pad, Math.min(window.innerHeight - boxH - pad, rect.top - 10));
+      }
+      // Если элемент находится в правом сайдбаре — открываем карточку слева от панели
+      else if (anchorEl && anchorEl.closest('#rightSidebar')) {
+        left = rect.left - boxW - 12;
+        top = Math.max(pad, Math.min(window.innerHeight - boxH - pad, rect.top - 10));
+      }
+      // Если внизу экрана не хватает места — открываем карточку НАД кнопкой
+      else if (top + boxH > window.innerHeight - pad) {
+        top = Math.max(pad, rect.top - boxH - 10);
+      }
+
+      // Ограничиваем по горизонтали в пределах окна
+      left = Math.max(pad, Math.min(window.innerWidth - boxW - pad, left));
+      top = Math.max(pad, Math.min(window.innerHeight - boxH - pad, top));
+
+      box.style.left = `${Math.round(left)}px`;
+      box.style.top = `${Math.round(top)}px`;
+      box.classList.remove('opacity-0');
+      box.classList.add('opacity-100');
+    }
+
+    function hideSmartTooltip() {
+      if (tooltipHoverTimer) {
+        clearTimeout(tooltipHoverTimer);
+        tooltipHoverTimer = null;
+      }
+      currentTooltipAnchor = null;
+      const box = document.getElementById('smartHelpTooltip');
+      if (box) {
+        box.classList.remove('opacity-100');
+        box.classList.add('opacity-0', 'hidden');
+      }
+    }
+
+    function initSmartTooltips() {
+      const chk = document.getElementById('showTooltipsCheck');
+      if (chk) chk.checked = smartTooltipsEnabled;
+
+      stripNativeTitles();
+
+      document.addEventListener('mouseover', e => {
+        if (!smartTooltipsEnabled || pointer.isDown) return;
+        if (e.target === canvas) {
+          hideSmartTooltip();
+          return;
+        }
+        stripNativeTitles();
+        const data = resolveSmartTooltipData(e.target);
+        if (!data) {
+          hideSmartTooltip();
+          return;
+        }
+        const anchor = data.anchor || e.target.closest('.catalog-card, .cat-pill, button, a, select, label, [id]') || e.target;
+        if (currentTooltipAnchor === anchor) return;
+
+        if (tooltipHoverTimer) clearTimeout(tooltipHoverTimer);
+        currentTooltipAnchor = anchor;
+        tooltipHoverTimer = setTimeout(() => {
+          showSmartTooltip(anchor, data);
+        }, 110);
+      });
+
+      document.addEventListener('mousedown', () => {
+        hideSmartTooltip();
+      });
+
+      document.addEventListener('wheel', () => {
+        hideSmartTooltip();
+      }, { passive: true });
+    }
+
+
+    // =========================================================================
+    // ЖИВЫЕ ВИЗУАЛЬНЫЕ ЭФФЕКТЫ (СНЕГОПАД, МЕРЦАНИЕ ВОДЫ И ИМПУЛЬС ПОСТРОЙКИ)
+    // =========================================================================
+    let ambientEffectsEnabled = localStorage.getItem('island_ambient_fx') !== '0';
+    const snowParticles = [];
+    const placementPulses = [];
+    const SNOW_COUNT = 38;
+    let lastSnowTime = performance.now();
+
+    function initAmbientSnow() {
+      snowParticles.length = 0;
+      const w = window.innerWidth || 1600;
+      const h = window.innerHeight || 900;
+      for (let i = 0; i < SNOW_COUNT; i++) {
+        snowParticles.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          r: 1.0 + Math.random() * 1.6,
+          vy: 14 + Math.random() * 20,
+          vx: -6 + Math.random() * 12,
+          phase: Math.random() * Math.PI * 2,
+          alpha: 0.14 + Math.random() * 0.22
+        });
+      }
+    }
+
+    function spawnPlacementPulse(gx, gy, gw, gh, color = '#38bdf8') {
+      if (!ambientEffectsEnabled || isInitializing) return;
+      // Ограничиваем число одновременных импульсов при массовой заливке, чтобы не перегружать кадр
+      if (placementPulses.length > 24) placementPulses.shift();
+
+      const cTop = gridToScreenIso(gx, gy);
+      const cBottom = gridToScreenIso(gx + gw, gy + gh);
+      const cx = (cTop.x + cBottom.x) / 2;
+      const cy = (cTop.y + cBottom.y) / 2;
+
+      const sparks = [];
+      const sparkCount = (gw >= 2 || gh >= 2) ? 8 : 4;
+      for (let i = 0; i < sparkCount; i++) {
+        const ang = (Math.PI * 2 * i) / sparkCount + (Math.random() * 0.35);
+        const spd = (gw >= 2 ? 26 : 14) + Math.random() * 16;
+        sparks.push({
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd - 10,
+          r: 1.6 + Math.random() * 1.4
+        });
+      }
+
+      placementPulses.push({
+        gx, gy, gw, gh, cx, cy,
+        color,
+        born: performance.now(),
+        duration: (gw >= 2 || gh >= 2) ? 520 : 360,
+        sparks
+      });
+    }
+
+    function renderPlacementPulsesWorld(ctx) {
+      if (placementPulses.length === 0) return;
+      const now = performance.now();
+      for (let i = placementPulses.length - 1; i >= 0; i--) {
+        const p = placementPulses[i];
+        const t = (now - p.born) / p.duration;
+        if (t >= 1) {
+          placementPulses.splice(i, 1);
+          continue;
+        }
+        const ease = 1 - Math.pow(1 - t, 3);
+        const alpha = (1 - t) * 0.75;
+        const pad = ease * 0.32;
+
+        const pTop = gridToScreenIso(p.gx - pad, p.gy - pad);
+        const pRight = gridToScreenIso(p.gx + p.gw + pad, p.gy - pad);
+        const pBottom = gridToScreenIso(p.gx + p.gw + pad, p.gy + p.gh + pad);
+        const pLeft = gridToScreenIso(p.gx - pad, p.gy + p.gh + pad);
+
+        ctx.save();
+        ctx.strokeStyle = p.color || '#38bdf8';
+        ctx.globalAlpha = alpha;
+        ctx.lineWidth = 2.2 * (1 - t * 0.5);
+        ctx.beginPath();
+        ctx.moveTo(pTop.x, pTop.y);
+        ctx.lineTo(pRight.x, pRight.y);
+        ctx.lineTo(pBottom.x, pBottom.y);
+        ctx.lineTo(pLeft.x, pLeft.y);
+        ctx.closePath();
+        ctx.stroke();
+
+        // Мягкие искры от центра новой постройки
+        ctx.fillStyle = '#e0f2fe';
+        for (const s of p.sparks) {
+          const sx = p.cx + s.vx * ease;
+          const sy = p.cy + s.vy * ease;
+          ctx.beginPath();
+          ctx.arc(sx, sy, s.r * (1 - t * 0.6), 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    function renderAmbientSnowScreen(ctx) {
+      const now = performance.now();
+      const dt = Math.min(0.05, (now - lastSnowTime) / 1000);
+      lastSnowTime = now;
+
+      if (snowParticles.length === 0) initAmbientSnow();
+      const w = canvas.width;
+      const h = canvas.height;
+
+      ctx.save();
+      for (const fl of snowParticles) {
+        fl.y += fl.vy * dt;
+        fl.x += (fl.vx + Math.sin(now * 0.0012 + fl.phase) * 8) * dt;
+
+        if (fl.y > h + 6) {
+          fl.y = -6;
+          fl.x = Math.random() * w;
+        }
+        if (fl.x < -6) fl.x = w + 6;
+        if (fl.x > w + 6) fl.x = -6;
+
+        ctx.fillStyle = `rgba(226, 232, 240, ${fl.alpha})`;
+        ctx.beginPath();
+        ctx.arc(fl.x, fl.y, fl.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function toggleAmbientEffects(enabled) {
+      ambientEffectsEnabled = !!enabled;
+      localStorage.setItem('island_ambient_fx', ambientEffectsEnabled ? '1' : '0');
+      lastSnowTime = performance.now();
+      requestRender();
+      showToast(ambientEffectsEnabled ? "Живые эффекты (снег и вода) включены ❄️" : "Живые эффекты отключены");
+    }
+
+    function startAmbientAnimationLoop() {
+      function tick() {
+        if (ambientEffectsEnabled && !document.hidden) {
+          requestRender();
+        }
+        setTimeout(() => requestAnimationFrame(tick), 45);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    // =========================================================================
+    // ОБМЕН ПРОЕКТАМИ ПО КОРОТКОЙ ССЫЛКЕ (КОМПАКТНАЯ БИНАРНАЯ УПАКОВКА + LZ)
+    // =========================================================================
+    function encodeSnapshotToCompactPayload() {
+      // Группируем постройки по itemId для максимального сжатия (позволяет уместить все 3600 клеток в одну ссылку)
+      const groups = {};
+      for (const p of state.placements.values()) {
+        const defaultItem = ITEM_BY_ID[p.itemId];
+        const isRot = defaultItem && (p.w === defaultItem.h && p.h === defaultItem.w && defaultItem.w !== defaultItem.h) ? 1 : 0;
+        const isBuilt = p.built ? 1 : 0;
+        const key = `${p.itemId}_${isRot}_${isBuilt}`;
+        if (!groups[key]) groups[key] = [];
+        // Кодируем пару координат (x, y) от 1..60 одним числом от 0 до 3599
+        groups[key].push((p.y - 1) * GRID_SIZE + (p.x - 1));
+      }
+
+      const payload = {
+        n: state.projectName || "Остров Рассвета",
+        g: groups
+      };
+      const jsonStr = JSON.stringify(payload);
+      if (typeof LZString !== 'undefined') {
+        return LZString.compressToEncodedURIComponent(jsonStr);
+      }
+      return encodeURIComponent(btoa(unescape(encodeURIComponent(jsonStr))));
+    }
+
+    function decodeCompactPayloadToSnapshot(encodedStr) {
+      let jsonStr = null;
+      if (typeof LZString !== 'undefined') {
+        jsonStr = LZString.decompressFromEncodedURIComponent(encodedStr);
+      }
+      if (!jsonStr) {
+        jsonStr = decodeURIComponent(escape(atob(decodeURIComponent(encodedStr))));
+      }
+      const payload = JSON.parse(jsonStr);
+      if (!payload || !payload.g) return null;
+
+      const list = [];
+      for (const [key, cellIndices] of Object.entries(payload.g)) {
+        const [idStr, rotStr, builtStr] = key.split('_');
+        const itemId = Number(idStr);
+        const isRot = Number(rotStr) === 1;
+        const isBuilt = Number(builtStr) === 1;
+        const item = ITEM_BY_ID[itemId];
+        if (!item || !Array.isArray(cellIndices)) continue;
+
+        const w = isRot ? item.h : item.w;
+        const h = isRot ? item.w : item.h;
+
+        for (const idx of cellIndices) {
+          const x = (idx % GRID_SIZE) + 1;
+          const y = Math.floor(idx / GRID_SIZE) + 1;
+          list.push({ itemId, x, y, w, h, built: isBuilt });
+        }
+      }
+
+      return {
+        projectName: payload.n || "Проект по ссылке",
+        list,
+        reserves: []
+      };
+    }
+
+    function copyShareableProjectUrl() {
+      try {
+        const compressed = encodeSnapshotToCompactPayload();
+        const baseUrl = window.location.origin + window.location.pathname;
+        const shareUrl = `${baseUrl}#map=${compressed}`;
+
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          showToast(`Ссылка на проект «${state.projectName}» скопирована! Отправьте её другу 🔗`);
+        }).catch(() => {
+          prompt("Скопируйте прямую ссылку на ваш проект:", shareUrl);
+        });
+      } catch (err) {
+        showToast("Ошибка создания ссылки: " + err.message);
+      }
+    }
+
+    function tryRestoreFromSharedUrlHash() {
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      let encoded = null;
+
+      if (hash.includes('map=')) {
+        encoded = hash.split('map=')[1].split('&')[0];
+      } else if (search.includes('map=')) {
+        encoded = new URLSearchParams(search).get('map');
+      }
+
+      if (!encoded) return false;
+
+      try {
+        const snap = decodeCompactPayloadToSnapshot(encoded);
+        if (snap && Array.isArray(snap.list)) {
+          restoreSnapshot(snap);
+          // Очищаем длинный хэш из адресной строки, чтобы ссылка снова стала аккуратной
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, document.title, window.location.pathname);
+          }
+          return true;
+        }
+      } catch (e) {
+        console.warn("Ошибка распаковки проекта из ссылки:", e);
+      }
+      return false;
+    }
+
+    // =========================================================================
+    // ПРОЦЕДУРНЫЙ ЗВУКОВОЙ ДВИЖОК (WEB AUDIO API — БЕЗ MP3 ФАЙЛОВ)
+    // =========================================================================
+    let soundEffectsEnabled = localStorage.getItem('island_sound_fx') !== '0';
+    let studioAudioCtx = null;
+    let lastSfxTime = 0;
+
+    function getStudioAudioCtx() {
+      if (!studioAudioCtx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) studioAudioCtx = new AudioCtx();
+      }
+      if (studioAudioCtx && studioAudioCtx.state === 'suspended') {
+        studioAudioCtx.resume().catch(() => {});
+      }
+      return studioAudioCtx;
+    }
+
+    function toggleSoundEffects(enabled) {
+      soundEffectsEnabled = !!enabled;
+      localStorage.setItem('island_sound_fx', soundEffectsEnabled ? '1' : '0');
+      if (soundEffectsEnabled) {
+        playStudioSfx('check_on');
+      }
+      showToast(soundEffectsEnabled ? "Звуковые эффекты включены 🔊" : "Звуковые эффекты отключены 🔇");
+    }
+
+    function playStudioSfx(kind) {
+      if (!soundEffectsEnabled || isInitializing) return;
+      const nowMs = performance.now();
+      // Защита от дребезга при быстрой заливке или рисовании кистью (не чаще 1 звука в 42 мс)
+      if ((kind === 'place_tile' || kind === 'erase') && nowMs - lastSfxTime < 42) return;
+      lastSfxTime = nowMs;
+
+      const actx = getStudioAudioCtx();
+      if (!actx) return;
+
+      const now = actx.currentTime;
+
+      if (kind === 'place_big') {
+        // Мягкий глубокий аккорд установки крупного здания
+        const osc = actx.createOscillator();
+        const gain = actx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(145, now);
+        osc.frequency.exponentialRampToValueAtTime(290, now + 0.09);
+        gain.gain.setValueAtTime(0.11, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+        osc.connect(gain);
+        gain.connect(actx.destination);
+        osc.start(now);
+        osc.stop(now + 0.14);
+      } else if (kind === 'place_tile') {
+        // Лёгкий тактильный щелчок установки дорожки / дерева 1x1
+        const osc = actx.createOscillator();
+        const gain = actx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(520 + Math.random() * 60, now);
+        osc.frequency.exponentialRampToValueAtTime(310, now + 0.045);
+        gain.gain.setValueAtTime(0.045, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        osc.connect(gain);
+        gain.connect(actx.destination);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      } else if (kind === 'erase') {
+        // Мягкий нисходящий звук удаления
+        const osc = actx.createOscillator();
+        const gain = actx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(280, now);
+        osc.frequency.exponentialRampToValueAtTime(110, now + 0.065);
+        gain.gain.setValueAtTime(0.055, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+        osc.connect(gain);
+        gain.connect(actx.destination);
+        osc.start(now);
+        osc.stop(now + 0.07);
+      } else if (kind === 'check_on') {
+        // Приятный двойной сигнал отметки Прораба ✓
+        [587.33, 880].forEach((freq, idx) => {
+          const osc = actx.createOscillator();
+          const gain = actx.createGain();
+          const t0 = now + idx * 0.055;
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, t0);
+          gain.gain.setValueAtTime(0.06, t0);
+          gain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.11);
+          osc.connect(gain);
+          gain.connect(actx.destination);
+          osc.start(t0);
+          osc.stop(t0 + 0.11);
+        });
+      } else if (kind === 'ui_click') {
+        // Едва слышный клик интерфейса при смене инструмента
+        const osc = actx.createOscillator();
+        const gain = actx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(680, now);
+        osc.frequency.exponentialRampToValueAtTime(440, now + 0.025);
+        gain.gain.setValueAtTime(0.03, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+        osc.connect(gain);
+        gain.connect(actx.destination);
+        osc.start(now);
+        osc.stop(now + 0.03);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
       syncPresetSelectDropdown();
       resizeCanvas();
       focusGridRect(1, 1, 60, 60);
       updateCustomViewBtnState();
       selectItem(1);
 
-      // Автоматическое восстановление черновика при открытии или обновлении страницы
+      const sndChk = document.getElementById('showSoundCheck');
+      if (sndChk) sndChk.checked = soundEffectsEnabled;
+
+      const fxChk = document.getElementById('showFxCheck');
+      if (fxChk) fxChk.checked = ambientEffectsEnabled;
+      initAmbientSnow();
+      initSmartTooltips();
+      startAmbientAnimationLoop();
+
+      // 1. Сначала проверяем: открыл ли пользователь прямую ссылку с картой (#map=...)
+      let restoredFromUrl = tryRestoreFromSharedUrlHash();
+
+      // 2. Если ссылки нет — восстанавливаем автосохранённый черновик из браузера
       let restoredDraft = false;
-      const rawDraft = localStorage.getItem('island_autosave_draft');
-      if (rawDraft) {
-        try {
-          const parsedDraft = JSON.parse(rawDraft);
-          if (parsedDraft && Array.isArray(parsedDraft.list)) {
-            restoreSnapshot(parsedDraft);
-            restoredDraft = true;
-          }
-        } catch (e) {}
+      if (!restoredFromUrl) {
+        const rawDraft = localStorage.getItem('island_autosave_draft');
+        if (rawDraft) {
+          try {
+            const parsedDraft = JSON.parse(rawDraft);
+            if (parsedDraft && Array.isArray(parsedDraft.list)) {
+              restoreSnapshot(parsedDraft);
+              restoredDraft = true;
+            }
+          } catch (e) {}
+        }
       }
 
-      if (!restoredDraft) {
+      if (!restoredFromUrl && !restoredDraft) {
         refreshAllUI();
       }
 
       isInitializing = false;
       saveAutosaveDraft();
-      if (restoredDraft && state.placements.size > 0) {
+
+      if (restoredFromUrl) {
+        showToast(`Открыт проект по ссылке: «${state.projectName}» 🔗`);
+      } else if (restoredDraft && state.placements.size > 0) {
         showToast(`Черновик «${state.projectName}» автоматически восстановлен`);
       }
     });
